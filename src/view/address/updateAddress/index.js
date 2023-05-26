@@ -27,23 +27,38 @@ import {
   getDistrictByProvince,
   getWardByDistrict,
   addNewAddress,
+  updateAddressAPI,
 } from "../../../helper/controller/address";
-export default function AddNewAddress({ navigation, route }) {
+export default function UpdateAddress({ navigation, route }) {
   let account = route.params.account;
-
+  const addressInfo = route.params.addressInfo;
+  //console.log(addressInfo);
   const [visible, setVisible] = useState(false);
-  const [isEnabled, setIsEnabled] = useState(false);
+  const [isEnabled, setIsEnabled] = useState(
+    addressInfo.isDefaultAddress == 1 ? true : false
+  );
   const toggleSwitch = () => setIsEnabled((previousState) => !previousState);
 
-  const [selectedProvinceValue, setSelectedProvinceValue] = useState("");
-  const [selectedDistrictValue, setSelectedDistrictValue] = useState("");
-  const [selectedWardValue, setSelectedWardValue] = useState("");
-  const [address, setAddress] = useState("");
+  const [selectedProvinceValue, setSelectedProvinceValue] = useState({
+    provinceId: addressInfo.provinceId,
+    provinceName: addressInfo.provinceName,
+  });
+  const [selectedDistrictValue, setSelectedDistrictValue] = useState({
+    districtId: addressInfo.districtId,
+    districtName: addressInfo.districtName,
+  });
+  const [selectedWardValue, setSelectedWardValue] = useState({
+    wardId: addressInfo.wardId,
+    wardName: addressInfo.wardName,
+  });
+  const [address, setAddress] = useState(addressInfo.address);
   const [provinceList, setProvinceList] = useState([]);
   const [districtList, setDistrictList] = useState([]);
   const [wardList, setWardList] = useState([]);
-  const [name, setName] = useState("");
-  const [phoneNumber, setPhoneNumber] = useState("");
+  const [name, setName] = useState(addressInfo.contactName);
+  const [phoneNumber, setPhoneNumber] = useState(
+    addressInfo.contactPhoneNumber
+  );
   //console.log(wardList);
 
   const onSelectProvince = (option) => {
@@ -89,19 +104,25 @@ export default function AddNewAddress({ navigation, route }) {
       //console.log(result.data.data.district);
     }
   };
-  const handleAddNewAddress = async () => {
-    const result = await addNewAddress(
+  const handleUpdateAddress = async () => {
+    //console.log(account, addressInfo.customerAddressId);
+    const dataUpdate = {};
+    dataUpdate.provinceId = selectedProvinceValue.provinceId;
+    dataUpdate.contactName = name;
+    dataUpdate.contactPhoneNumber = phoneNumber;
+    dataUpdate.provinceName = selectedProvinceValue.provinceName;
+    dataUpdate.districtId = selectedDistrictValue.districtId;
+    dataUpdate.districtName = selectedDistrictValue.districtName;
+    dataUpdate.wardId = selectedWardValue.wardId;
+    dataUpdate.wardName = selectedWardValue.wardName;
+    dataUpdate.address = address;
+    dataUpdate.isDefaultAddress = isEnabled;
+    dataUpdate.isActived = 1;
+    //console.log(dataUpdate);
+    const result = await updateAddressAPI(
       account,
-      name,
-      phoneNumber,
-      selectedProvinceValue.provinceId,
-      selectedProvinceValue.provinceName,
-      selectedDistrictValue.districtId,
-      selectedDistrictValue.districtName,
-      selectedWardValue.wardId,
-      selectedWardValue.wardName,
-      address,
-      isEnabled
+      addressInfo.customerAddressId,
+      dataUpdate
     );
     if (result.status === 200) {
       Alert.alert(
@@ -133,7 +154,7 @@ export default function AddNewAddress({ navigation, route }) {
             <FontAwesome name="arrow-left" color="#ffffff" size={20} />
           </TouchableOpacity>
         </View>
-        <Text style={styles.returnText}>Địa chỉ mới</Text>
+        <Text style={styles.returnText}>Chi tiết địa chỉ</Text>
       </View>
       <View>
         <View
@@ -327,7 +348,7 @@ export default function AddNewAddress({ navigation, route }) {
           }}
         >
           <TouchableOpacity
-            onPress={() => handleAddNewAddress()}
+            onPress={() => handleUpdateAddress()}
             style={{
               paddingHorizontal: 40,
               paddingVertical: 12,

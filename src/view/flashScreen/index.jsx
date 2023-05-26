@@ -31,6 +31,7 @@ export default function FlashScreen({ navigation }) {
         <View style={styles.button}>
           <TouchableOpacity
             onPress={() => navigation.navigate("dashboardScreen")}
+            //onPress={() => navigation.navigate("completedOrder")}
           >
             <LinearGradient
               colors={["#FF4B3A", "#FF4B3A"]}

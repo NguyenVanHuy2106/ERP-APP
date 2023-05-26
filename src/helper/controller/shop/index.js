@@ -17,6 +17,7 @@ export const getModelByMainGroup = async (
           subgroupId: subgroupId,
           brandId: brandId,
           storeId: 1,
+          inventoryStatusId: 1,
           isActive: 1,
           limit: limit,
           offset: 0,
@@ -42,9 +43,10 @@ export const getModelByKeyWord = async (keyword) => {
       {
         data: {
           keyword: keyword,
+          inventoryStatusId: 1,
           isActived: 1,
           storeId: 1,
-          limit: 20,
+          limit: 200,
           offset: 0,
         },
       },
@@ -61,12 +63,13 @@ export const getModelByKeyWord = async (keyword) => {
   }
 };
 
-export const getModelInfoAPI = async (modelId) => {
+export const getModelInfoAPI = async (account, modelId) => {
   try {
+    //console.log(account, modelId);
     const response = await API.post(
       "model/general/get-model-detail",
       {
-        userLogin: null,
+        userLogIn: account,
         data: {
           modelId: modelId,
         },
@@ -96,6 +99,7 @@ export const getProductIdByVarrant = async (
         data: {
           modelId: modelId,
           storeId: 1,
+          inventoryStatusId: 1,
           VarantProductAttributeList: varantProductAttributeList,
         },
       },

@@ -14,20 +14,23 @@ import {
 } from "react-native";
 
 import Entypo from "react-native-vector-icons/Entypo";
+import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 import AntDesign from "react-native-vector-icons/AntDesign";
 import { useSelector } from "react-redux";
 import Feather from "react-native-vector-icons/Feather";
 import FontAwesome from "react-native-vector-icons/FontAwesome";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+
 import * as ImagePicker from "expo-image-picker";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useIsFocused } from "@react-navigation/native";
-import { getAccountInfoAPI } from "../../helper/controller/profile";
+import { getAccountInfoAPI, countOrder } from "../../helper/controller/profile";
 export default function Profile({ navigation }) {
   const isFocused = useIsFocused();
   const [image, setImage] = useState(null);
   const [account, setAccount] = useState(null);
   const [visible, setVisible] = useState(false);
   const [accountInfo, setAccountInfo] = useState({});
+  const [countQuantityOrder, setCountQuantityOrder] = useState({});
 
   // console.log(account.data.userId);
   const [linkImage, setLinkImage] = useState(null);
@@ -41,14 +44,25 @@ export default function Profile({ navigation }) {
     const accountFromStorage = await AsyncStorage.getItem("account");
     setAccount(JSON.parse(accountFromStorage));
     getAccountInfo(accountFromStorage);
+    getCountOrder(JSON.parse(accountFromStorage));
   };
   const getAccountInfo = async (accountId) => {
     setVisible(true);
     const result = await getAccountInfoAPI(accountId);
+    //console.log(result);
     if (result.status == 200) {
       setVisible(false);
       setAccountInfo(result.data.data.customers.md_customer_info);
       //console.log(result.data.data.customers);
+    } else {
+      setVisible(false);
+      // Alert.alert("Thông báo", "Sự cố lấy thông tin");
+    }
+  };
+  const getCountOrder = async (account) => {
+    const result = await countOrder(account);
+    if (result.status === 200) {
+      setCountQuantityOrder(result.data.data.resCount);
     }
   };
   useEffect(() => {
@@ -107,37 +121,30 @@ export default function Profile({ navigation }) {
                 alignItems: "center",
               }}
             >
-              <TouchableOpacity
-                onPress={selectImage}
-                style={{
-                  zIndex: 2,
-                  position: "absolute",
-                  bottom: 40,
-                  right: 10,
-                  backgroundColor: "#ffffff",
-                  width: 30,
-                  height: 30,
-                  borderRadius: 50,
-                  borderWidth: 1,
-                  justifyContent: "center",
-                  alignItems: "center",
-                }}
-              >
-                <FontAwesome name="camera" size={15} />
-              </TouchableOpacity>
-
-              <Image
+              <View
                 style={{
                   width: 150,
                   height: 150,
                   borderRadius: 100,
                   borderWidth: 3,
                   borderColor: "#ffffff",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  backgroundColor: "#cccccc",
+                  flexDirection: "row",
                 }}
-                source={{
-                  uri: image,
-                }}
-              />
+              >
+                {accountInfo.firstname && (
+                  <Text style={{ fontSize: 50, fontWeight: "bold" }}>
+                    {accountInfo.firstname.charAt(0)}
+                  </Text>
+                )}
+                {accountInfo.lastname && (
+                  <Text style={{ fontSize: 50, fontWeight: "bold" }}>
+                    {accountInfo.lastname.charAt(0)}
+                  </Text>
+                )}
+              </View>
 
               {accountInfo.firstname && (
                 <Text style={{ fontWeight: "bold", fontSize: 20 }}>
@@ -260,7 +267,10 @@ export default function Profile({ navigation }) {
             <FontAwesome name="reorder" size={25} />
             <Text style={{ fontSize: 18, marginLeft: 10 }}>Đơn mua</Text>
           </View>
-          <View
+          <TouchableOpacity
+            onPress={() => {
+              navigation.navigate("orderList", { screen: "Hoàn tất" });
+            }}
             style={{
               flexDirection: "row",
               alignItems: "center",
@@ -269,28 +279,31 @@ export default function Profile({ navigation }) {
           >
             <Text>Lịch sử mua hàng</Text>
             <Feather name="chevron-right" size={15} style={{ marginTop: 1 }} />
-          </View>
+          </TouchableOpacity>
         </View>
         <View
           style={{
             flexDirection: "row",
-            justifyContent: "space-around",
+            justifyContent: "space-between",
             marginTop: 10,
-
             height: 100,
             marginHorizontal: 15,
             borderRadius: 10,
             backgroundColor: "#ffffff",
           }}
         >
-          <View
+          <TouchableOpacity
+            onPress={() => {
+              navigation.navigate("orderList", { screen: "Chờ xác nhận" });
+            }}
             style={{
               justifyContent: "center",
               alignItems: "center",
+              flex: 1,
             }}
           >
             <View>
-              <FontAwesome name="credit-card" size={25} />
+              <FontAwesome name="credit-card" size={30} />
               <View
                 style={{
                   position: "absolute",
@@ -304,15 +317,23 @@ export default function Profile({ navigation }) {
                   alignItems: "center",
                 }}
               >
-                <Text style={{ color: "#ffffff" }}>2</Text>
+                <Text style={{ color: "#ffffff" }}>
+                  {countQuantityOrder.confirmWaiting
+                    ? countQuantityOrder.confirmWaiting
+                    : null}
+                </Text>
               </View>
             </View>
-            <Text>Chờ xác nhận</Text>
-          </View>
-          <View
+            <Text style={{ textAlign: "center" }}>Chờ xác nhận</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => {
+              navigation.navigate("orderList", { screen: "Chờ lấy hàng" });
+            }}
             style={{
               justifyContent: "center",
               alignItems: "center",
+              flex: 1,
             }}
           >
             <View>
@@ -330,15 +351,23 @@ export default function Profile({ navigation }) {
                   alignItems: "center",
                 }}
               >
-                <Text style={{ color: "#ffffff" }}>2</Text>
+                <Text style={{ color: "#ffffff" }}>
+                  {countQuantityOrder.outputWaiting
+                    ? countQuantityOrder.outputWaiting
+                    : null}
+                </Text>
               </View>
             </View>
-            <Text>Chờ lấy hàng</Text>
-          </View>
-          <View
+            <Text style={{ textAlign: "center" }}>Chờ lấy hàng</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => {
+              navigation.navigate("orderList", { screen: "Đang giao" });
+            }}
             style={{
               justifyContent: "center",
               alignItems: "center",
+              flex: 1,
             }}
           >
             <View>
@@ -356,11 +385,15 @@ export default function Profile({ navigation }) {
                   alignItems: "center",
                 }}
               >
-                <Text style={{ color: "#ffffff" }}>2</Text>
+                <Text style={{ color: "#ffffff" }}>
+                  {countQuantityOrder.deliverying
+                    ? countQuantityOrder.deliverying
+                    : null}
+                </Text>
               </View>
             </View>
-            <Text>Đang giao</Text>
-          </View>
+            <Text style={{ textAlign: "center" }}>Đang giao</Text>
+          </TouchableOpacity>
         </View>
         <View
           style={{

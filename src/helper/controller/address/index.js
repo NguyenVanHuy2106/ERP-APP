@@ -80,6 +80,8 @@ export const getWardByDistrict = async (districtId) => {
 };
 export const addNewAddress = async (
   customerId,
+  contactName,
+  contactPhoneNumber,
   provinceId,
   provinceName,
   districtId,
@@ -90,11 +92,14 @@ export const addNewAddress = async (
   isDefaultAddress
 ) => {
   try {
+    //console.log(isDefaultAddress);
     const response = await API.post(
       "customer-address/addNew",
       {
         customerId: customerId,
         data: {
+          contactName: contactName,
+          contactPhoneNumber: contactPhoneNumber,
           provinceId: provinceId,
           provinceName: provinceName,
           districtId: districtId,
@@ -104,6 +109,52 @@ export const addNewAddress = async (
           address: address,
           isDefaultAddress: isDefaultAddress,
           isActived: 1,
+        },
+      },
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    return response;
+  } catch (err) {
+    return err;
+  }
+};
+export const updateAddressAPI = async (
+  customerId,
+  customerAddressId,
+  dataUpdate
+) => {
+  try {
+    //console.log(isDefaultAddress);
+    const response = await API.post(
+      "customer-address/update",
+      {
+        customerId: customerId,
+        customerAddressId: customerAddressId,
+        data: dataUpdate,
+      },
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    return response;
+  } catch (err) {
+    return err;
+  }
+};
+export const deleteAddress = async (customerId, customerAddressId) => {
+  try {
+    const response = await API.post(
+      "customer-address/delete",
+      {
+        data: {
+          customerId: customerId,
+          customerAddressId: customerAddressId,
         },
       },
       {

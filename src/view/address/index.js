@@ -18,7 +18,11 @@ import AntDesign from "react-native-vector-icons/AntDesign";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import { useIsFocused } from "@react-navigation/native";
 import { Card } from "react-native-elements";
-import { getAllAddressByCustomerId } from "../../helper/controller/address";
+import Swipeable from "react-native-gesture-handler/Swipeable";
+import {
+  getAllAddressByCustomerId,
+  deleteAddress,
+} from "../../helper/controller/address";
 export default function Address({ navigation, route }) {
   let account = route.params.account;
   const isFocused = useIsFocused();
@@ -33,6 +37,40 @@ export default function Address({ navigation, route }) {
       setVisible(false);
       setAddressList(result.data.data.customerAddress);
     }
+  };
+  const renderRightActions = (customerAddressId) => {
+    const deleteItem = async (customerAddressId) => {
+      // console.log(customerAddressId);
+      const result = await deleteAddress(account, customerAddressId);
+      if (result.status === 200) {
+        getAllAddress(account);
+      }
+    };
+    return (
+      <TouchableOpacity
+        onPress={() => deleteItem(customerAddressId)}
+        style={{
+          justifyContent: "center",
+          alignItems: "flex-end",
+          paddingRight: 16,
+          paddingLeft: 8,
+          zIndex: 6,
+        }}
+      >
+        <View
+          style={{
+            justifyContent: "center",
+            alignItems: "center",
+            backgroundColor: "#ff0000",
+            paddingHorizontal: 8,
+            paddingVertical: 12,
+            borderRadius: 10,
+          }}
+        >
+          <FontAwesome name="trash-o" size={30} color="#ffffff" />
+        </View>
+      </TouchableOpacity>
+    );
   };
   useEffect(() => {
     getAllAddress(account);
@@ -54,63 +92,83 @@ export default function Address({ navigation, route }) {
       <View style={{ height: "90%" }}>
         <FlatList
           data={addressList}
+          showsVerticalScrollIndicator={false}
           renderItem={({ item, index }) => {
             return (
-              <View
-                key={index}
-                style={{
-                  marginLeft: 16,
-                  marginRight: 16,
-                  marginTop: 8,
-                  borderRadius: 8,
-                  paddingHorizontal: 16,
-                  paddingVertical: 16,
-                  backgroundColor: "#ffffff",
-                }}
+              <Swipeable
+                renderRightActions={() =>
+                  renderRightActions(item.customerAddressId)
+                }
               >
-                <View
+                <TouchableOpacity
+                  onPress={() => {
+                    navigation.navigate("updateAddress", {
+                      account: account,
+                      addressInfo: item,
+                    });
+                  }}
+                  key={index}
                   style={{
-                    flexDirection: "row",
-                    justifyContent: "space-between",
-                    paddingBottom: 12,
+                    marginLeft: 16,
+                    marginRight: 16,
+                    marginTop: 8,
+                    borderRadius: 8,
+                    paddingHorizontal: 16,
+                    paddingVertical: 16,
+                    backgroundColor: "#ffffff",
                   }}
                 >
-                  <Text style={{ fontWeight: "bold" }}>
-                    {"Địa chỉ " + (index + 1)}
-                  </Text>
-                  <View>
-                    {item.isDefaultAddress ? (
-                      <Text
-                        style={{
-                          color: "#ff0000",
-                          borderWidth: 1,
-                          borderColor: "#ff0000",
-                          paddingHorizontal: 8,
-                          paddingVertical: 4,
-                        }}
-                      >
-                        Mặc định
-                      </Text>
-                    ) : null}
-                  </View>
-                </View>
-                <View>
-                  {item.address && (
-                    <Text style={{ fontSize: 15, color: "#666666" }}>
-                      {item.address}
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      justifyContent: "space-between",
+                      paddingBottom: 12,
+                    }}
+                  >
+                    <Text style={{ fontWeight: "bold" }}>
+                      {"Địa chỉ " + (index + 1)}
                     </Text>
-                  )}
-                </View>
-                <View>
-                  <Text style={{ fontSize: 15, color: "#666666" }}>
-                    {item.wardName +
-                      ", " +
-                      item.districtName +
-                      ", " +
-                      item.provinceName}
-                  </Text>
-                </View>
-              </View>
+                    <View>
+                      {item.isDefaultAddress ? (
+                        <Text
+                          style={{
+                            color: "#ff0000",
+                            borderWidth: 1,
+                            borderColor: "#ff0000",
+                            paddingHorizontal: 8,
+                            paddingVertical: 4,
+                          }}
+                        >
+                          Mặc định
+                        </Text>
+                      ) : null}
+                    </View>
+                  </View>
+                  <View style={{ paddingBottom: 4 }}>
+                    {item.contactName && (
+                      <Text style={{ fontSize: 15, color: "#666666" }}>
+                        {item.contactName + " | | " + item.contactPhoneNumber}
+                      </Text>
+                    )}
+                  </View>
+                  <View>
+                    {item.address && (
+                      <Text style={{ fontSize: 15, color: "#666666" }}>
+                        {item.address}
+                      </Text>
+                    )}
+                  </View>
+                  <View>
+                    <Text style={{ fontSize: 15, color: "#666666" }}>
+                      {item.wardName +
+                        ", " +
+                        item.districtName +
+                        ", " +
+                        item.provinceName}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              </Swipeable>
             );
           }}
         />
@@ -120,8 +178,8 @@ export default function Address({ navigation, route }) {
           position: "absolute",
           bottom: 0,
           right: 0,
-          paddingHorizontal: 50,
-          paddingVertical: 70,
+          marginHorizontal: 50,
+          marginVertical: 70,
         }}
       >
         <TouchableOpacity

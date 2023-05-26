@@ -19,12 +19,15 @@ import { Card } from "react-native-elements";
 import { getAllSubGroup } from "../../helper/controller/subGroup";
 import { getAllMainGroup } from "../../helper/controller/mainGroup";
 import { getModelByMainGroup } from "../../helper/controller/shop";
-
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useIsFocused } from "@react-navigation/native";
 export default function Shop({ navigation }) {
   const [dataSearch, setDataSearch] = useState({
     textSearch: "",
   });
+  const isFocused = useIsFocused();
   const [visible, setVisible] = useState(false);
+  const [account, setAccount] = useState(null);
   const [subGroupList, setSubGroupList] = useState([]);
   const [mainGroupList, setMainGroupList] = useState([]);
   const [mainGroupIdSelect, setMainGroupIdSelect] = useState(null);
@@ -38,11 +41,23 @@ export default function Shop({ navigation }) {
       textSearch: val,
     });
   };
+  const getAccount = async () => {
+    const accountFromStorage = await AsyncStorage.getItem("account");
+    setAccount(JSON.parse(accountFromStorage));
+  };
   const handleMaiGroupList = async () => {
+    //setVisible(true);
     const result = await getAllMainGroup();
     if (result.status == 200) {
+      //setVisible(false);
       setMainGroupList(result.data.data.maingroups);
-
+      //console.log(result.data.data.maingroups[0].maingroupId);
+      getModelByMainGroupId(
+        result.data.data.maingroups[0].maingroupId,
+        null,
+        null,
+        limitA
+      );
       //console.log(result.data.data.subgroups);
     }
   };
@@ -67,9 +82,9 @@ export default function Shop({ navigation }) {
     // if (global.userId == null) {
     //   console.log("Huy");
     // }
+    getAccount();
     handleMaiGroupList();
-    getModelByMainGroupId(null, null, null, limitA);
-  }, []);
+  }, [isFocused]);
   // Đăng ký sự kiện
 
   return (
@@ -98,9 +113,11 @@ export default function Shop({ navigation }) {
             />
             <TouchableOpacity
               onPress={() => {
-                navigation.navigate("productSearch", {
-                  keyWord: dataSearch.textSearch,
-                });
+                if (dataSearch.textSearch.length > 0) {
+                  navigation.navigate("productSearch", {
+                    keyWord: dataSearch.textSearch,
+                  });
+                }
               }}
             >
               <View style={styles.iconSearch}>
@@ -111,7 +128,23 @@ export default function Shop({ navigation }) {
           </View>
           <TouchableOpacity
             onPress={() => {
-              navigation.navigate("cartScreen");
+              if (account !== null) {
+                navigation.navigate("cartScreen");
+              } else {
+                Alert.alert(
+                  "Thông báo",
+                  "Vui lòng đăng nhập",
+                  [
+                    {
+                      text: "OK",
+                      onPress: () => {
+                        navigation.navigate("signInScreen"); // Chuyển đến trang đăng nhập
+                      },
+                    },
+                  ],
+                  { cancelable: false }
+                );
+              }
             }}
             style={{
               flex: 1,
@@ -220,108 +253,131 @@ export default function Shop({ navigation }) {
           />
         </View>
 
-        {modelList && (
-          <View
-            style={{
-              marginLeft: 0,
-              marginRight: 0,
-              marginTop: 0,
-              zIndex: 2,
-              flexDirection: "row",
-              justifyContent: "center",
-              alignItems: "center",
-              flexWrap: "wrap",
-            }}
-          >
-            {modelList.map((item, index) => {
-              return (
-                <TouchableOpacity
-                  key={index}
-                  onPress={() => {
-                    navigation.navigate("shopDetailScreen", {
-                      modelId: item.modelId,
-                      modelPrice: item.modelPrice,
-                      maingroupId: item.maingroupId,
-                      subgroupId: item.subgroupId,
-                    });
-                  }}
-                >
-                  <Card
-                    containerStyle={{
-                      marginLeft: 5,
-                      marginRight: 5,
-                      marginTop: 5,
-                      marginBottom: 5,
-                      width: 180,
-                      height: 250,
-                      borderRadius: 10,
-                      borderWidth: 0,
-                      shadowColor: "#EEEEEE",
-                      shadowOffset: { width: 0, height: 0 },
-                      shadowOpacity: 0.8,
-                      shadowRadius: 2,
+        <View
+          style={{
+            paddingHorizontal: 4,
+            paddingTop: 8,
+          }}
+        >
+          {modelList && (
+            <View
+              style={{
+                zIndex: 2,
+                flexDirection: "row",
+                flexWrap: "wrap",
+              }}
+            >
+              {modelList.map((item, index) => {
+                return (
+                  <TouchableOpacity
+                    key={index}
+                    onPress={() => {
+                      navigation.navigate("shopDetailScreen", {
+                        modelId: item.modelId,
+                        modelPrice: item.modelPrice,
+                        maingroupId: item.maingroupId,
+                        subgroupId: item.subgroupId,
+                        modelStockAmount: item.amount,
+                      });
                     }}
                   >
-                    <View>
-                      <View
-                        style={{
-                          justifyContent: "center",
-                          alignItems: "center",
-                        }}
-                      >
-                        <Image
-                          source={{
-                            uri: item.modelImagePath
-                              ? item.modelImagePath
-                              : "https://icon-library.com/images/image-icon-png/image-icon-png-6.jpg",
-                          }}
+                    <Card
+                      containerStyle={{
+                        marginLeft: 5,
+                        marginRight: 5,
+                        marginTop: 5,
+                        marginBottom: 5,
+                        width: 190,
+                        height: 270,
+                        borderWidth: 0,
+                        shadowColor: "#EEEEEE",
+                        shadowOffset: { width: 0, height: 0 },
+                        shadowOpacity: 0.8,
+                        shadowRadius: 2,
+                        alignItems: "center",
+                      }}
+                    >
+                      <View>
+                        <View
                           style={{
-                            width: 150,
-                            height: 150,
-                            marginLeft: 0,
-                            marginRight: 0,
-                            borderRadius: 10,
-                          }}
-                        />
-                        <View style={{ marginTop: 20 }}>
-                          <Text
-                            style={{
-                              width: 170,
-                              textAlign: "center",
-                              fontSize: 15,
-                            }}
-                          >
-                            {item.modelName}
-                          </Text>
-                        </View>
-                      </View>
-                      <View
-                        style={{
-                          paddingTop: 8,
-                          flexDirection: "row",
-                          alignItems: "center",
-                          paddingLeft: 10,
-                        }}
-                      >
-                        <Text
-                          style={{
-                            width: 170,
-                            paddingLeft: 4,
-                            fontSize: 15,
-                            color: "#cc0000",
-                            fontWeight: "bold",
+                            justifyContent: "center",
+                            alignItems: "center",
                           }}
                         >
-                          {"đ" + item.modelPrice.toLocaleString()}
-                        </Text>
+                          <Image
+                            source={{
+                              uri: item.modelImagePath
+                                ? item.modelImagePath
+                                : "https://icon-library.com/images/image-icon-png/image-icon-png-6.jpg",
+                            }}
+                            style={{
+                              width: 150,
+                              height: 150,
+                              marginLeft: 0,
+                              marginRight: 0,
+                              borderRadius: 10,
+                            }}
+                          />
+                          <View style={{ marginTop: 20 }}>
+                            <Text
+                              style={{
+                                width: 170,
+                                textAlign: "center",
+                                fontSize: 15,
+                              }}
+                            >
+                              {item.modelName}
+                            </Text>
+                          </View>
+                          {item.promotionProgramId !== null && (
+                            <View
+                              style={{
+                                flexDirection: "row",
+                                justifyContent: "center",
+                                alignItems: "center",
+                              }}
+                            >
+                              <Text
+                                style={{
+                                  fontSize: 15,
+                                  textDecorationLine: "line-through",
+                                }}
+                              >
+                                {"đ" + item.modelPrice.toLocaleString()}
+                              </Text>
+                              <Text
+                                style={{
+                                  fontSize: 16,
+                                  color: "#ff0000",
+                                  paddingLeft: 4,
+                                }}
+                              >
+                                {item.isPercentValue === 1
+                                  ? "-" + item.value + "%"
+                                  : "-" + item.value}
+                              </Text>
+                            </View>
+                          )}
+                          <View>
+                            <Text
+                              style={{
+                                fontSize: 17,
+                                fontWeight: "bold",
+                                color: "#ff0000",
+                              }}
+                            >
+                              {"đ" + item.discountValue.toLocaleString()}
+                            </Text>
+                          </View>
+                        </View>
                       </View>
-                    </View>
-                  </Card>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-        )}
+                    </Card>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          )}
+        </View>
         {modelList != null && modelList.length > 20 && (
           <TouchableOpacity
             onPress={() => {

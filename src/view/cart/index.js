@@ -9,59 +9,222 @@ import {
   FlatList,
   Image,
   Modal,
+  ScrollView,
   ActivityIndicator,
+  Alert,
 } from "react-native";
 import FontAwesome from "react-native-vector-icons/FontAwesome";
 import { getModelByMainGroup } from "../../helper/controller/shop";
+import {
+  getSuggestBySubgroupList,
+  getCartItemsAPI,
+  deleteCartItems,
+} from "../../helper/controller/cart";
 import { useIsFocused } from "@react-navigation/native";
 import NumericInput from "react-native-numeric-input";
 import Swipeable from "react-native-gesture-handler/Swipeable";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { CheckBox, Icon, Card } from "react-native-elements";
+import { value } from "deprecated-react-native-prop-types/DeprecatedTextInputPropTypes";
 export default function Cart({ navigation }) {
   const [cartItemList, setCartItemList] = useState([]);
   const [visible, setVisible] = useState(false);
   const isFocused = useIsFocused();
-  const [quantity, setQuantity] = useState(0);
+  const [account, setAccount] = useState(null);
+  const [checkedItems, setCheckedItems] = useState([]);
+  const [quantityValue, setQuantityValue] = useState([]);
+  const [suggestList, setSuggestList] = useState([]);
+  const [totalAmount, setTotalAmount] = useState(0);
+  const boxSize = {};
 
-  const handleQuantityChange = (value) => {
-    setQuantity(value);
-  };
-  const getModelByMainGroupId = async (mainGroupId, subGroup, brand, limit) => {
-    setVisible(true);
-    const result = await getModelByMainGroup(
-      mainGroupId,
-      subGroup,
-      brand,
-      limit
-    );
-    if (result.status == 200) {
-      setCartItemList(result.data.data.modelList);
-      setVisible(false);
-    } else {
-      Alert.alert("Thông báo", "Lỗi lấy dữ liệu");
+  let total = 0;
+  //console.log(checkedItems);
+  checkedItems.forEach((item) => {
+    //console.log(item);
+    total += item.quantity * item.discountValue;
+  });
+  //console.log(total);
+  //console.log(checkedItems);
+  //console.log(quantityValue);
+
+  //console.log(total);
+
+  //console.log(totalAmount);
+  //console.log(totalAmount);
+  var subGroupIdList = [];
+
+  const handleCheck = (modelId, productId) => {
+    if (modelId && productId) {
+      const foundItemIndex = checkedItems.findIndex(
+        (item) => item.modelId === modelId && item.productId === productId
+      );
+      if (foundItemIndex !== -1) {
+        const updatedItems = [...checkedItems];
+        updatedItems.splice(foundItemIndex, 1);
+        setCheckedItems(updatedItems);
+      } else {
+        const cartItem = cartItemList.find(
+          (item) => item.modelId === modelId && item.productId === productId
+        );
+        if (cartItem) {
+          console.log(cartItem);
+          const newCheckedItem = {
+            cartcustomerId: cartItem.cartcustomerId,
+            subgroupId: cartItem.subgroupId,
+            modelId: modelId,
+            productId: productId,
+            quantity:
+              quantityValue[`${productId}_${modelId}`] ||
+              cartItem.quantity > cartItem.availableInstockAmount
+                ? cartItem.availableInstockAmount
+                : cartItem.quantity,
+            modelName: cartItem.modelName,
+            productName: cartItem.productName,
+            price: cartItem.price,
+            modelImagePath: cartItem.modelImagePath,
+            isRequestImei: cartItem.isRequestImei,
+            width: cartItem.width,
+            length: cartItem.length,
+            height: cartItem.height,
+            weight: cartItem.weight,
+            discountValue: cartItem.discountValue,
+            promotionProgramId: cartItem.promotionProgramId,
+            promotionProgramName: cartItem.promotionProgramName,
+          };
+          setCheckedItems([...checkedItems, newCheckedItem]);
+        }
+      }
     }
   };
+
+  const getCartItems = async (account) => {
+    //console.log(account);
+    setVisible(true);
+    const result = await getCartItemsAPI(account);
+    //console.log(result.data.data.cartList);
+    if (result.status === 200) {
+      setVisible(false);
+      setCartItemList(result.data.data.cartList);
+      var subGroup = result.data.data.cartList;
+      //console.log(subGroup);
+      subGroup.forEach((item) => {
+        if (!subGroupIdList.includes(item.subgroupId)) {
+          subGroupIdList.push(item.subgroupId);
+        }
+        //setTotalAmount(totalAmount + item.quantity * item.price);
+        //totalMoney = totalMoney + item.quantity * item.price;
+      });
+      //getModelSuggest(subGroupIdList);
+
+      //console.log(subGroupIdList);
+      //setQuantity(result.data.data.cartList.quantity);
+    }
+  };
+
+  const handleQuantityChange = (value, modelId, productId) => {
+    const updatedQuantityValues = { ...quantityValue };
+    updatedQuantityValues[`${productId}_${modelId}`] = value;
+    //console.log(value);
+    setQuantityValue(updatedQuantityValues);
+
+    const foundItemIndex = checkedItems.findIndex(
+      (item) => item.modelId === modelId && item.productId === productId
+    );
+    if (foundItemIndex !== -1) {
+      const updatedItems = [...checkedItems];
+      updatedItems[foundItemIndex].quantity = value;
+      setCheckedItems(updatedItems);
+    }
+  };
+
+  // const getModelByMainGroupId = async (mainGroupId, subGroup, brand, limit) => {
+  //   setVisible(true);
+  //   const result = await getModelByMainGroup(
+  //     mainGroupId,
+  //     subGroup,
+  //     brand,
+  //     limit
+  //   );
+  //   if (result.status == 200) {
+  //     setCartItemList(result.data.data.modelList);
+  //     setVisible(false);
+  //     var subGroup = result.data.data.modelList;
+  //     //console.log(subGroup);
+  //     subGroup.forEach((item) => {
+  //       if (!subGroupIdList.includes(item.subgroupId)) {
+  //         subGroupIdList.push(item.subgroupId);
+  //       }
+  //     });
+  //     getModelSuggest(subGroupIdList);
+  //     //console.log(subGroupIdList);
+  //   } else {
+  //     Alert.alert("Thông báo", "Lỗi lấy dữ liệu");
+  //   }
+  // };
+
+  const getAccount = async () => {
+    const accountFromStorage = await AsyncStorage.getItem("account");
+    setAccount(JSON.parse(accountFromStorage));
+    getCartItems(JSON.parse(accountFromStorage));
+    getModelSuggest(JSON.parse(accountFromStorage));
+  };
+  const getModelSuggest = async (account) => {
+    const result = await getSuggestBySubgroupList(account);
+    if (result.status === 200) {
+      setSuggestList(result.data.data.modelList);
+    }
+    //console.log(result.data);
+  };
+  const deleteCart = async (customerId, cartcustomerId, quantity) => {
+    setVisible(true);
+    const result = await deleteCartItems(customerId, cartcustomerId, quantity);
+    if (result.status === 200) {
+      setVisible(false);
+      getCartItems(account);
+    }
+  };
+  // const getTotalAmount = () => {
+  //   let newTotalPrice = 0;
+  //   checkedItems.forEach((item) => {
+  //     const cartItem = cartItemList.find(
+  //       (cartItem) =>
+  //         cartItem.productId === item.productId &&
+  //         cartItem.modelId === item.modelId
+  //     );
+  //     if (cartItem) {
+  //       newTotalPrice += cartItem.price * item.quantity;
+  //     }
+  //   });
+  //   setTotalAmount(newTotalPrice);
+  // };
   useEffect(() => {
-    getModelByMainGroupId(2, 2, null, 20);
-  }, []);
-  const renderRightActions = (modelId) => {
-    const deleteItem = (modelId) => {
-      console.log(modelId);
+    //total = 0;
+    //getModelByMainGroupId(6, null, null, 20);
+    getAccount();
+    setCheckedItems([]);
+    setQuantityValue([]);
+  }, [isFocused]);
+  const renderRightActions = (item) => {
+    const deleteItem = (item) => {
+      //console.log(item);
+      deleteCart(account, item.cartcustomerId, item.quantity);
     };
     return (
       <TouchableOpacity
-        onPress={() => deleteItem(modelId)}
+        onPress={() => deleteItem(item)}
         style={{
           justifyContent: "center",
           alignItems: "flex-end",
           paddingRight: 4,
-          paddingLeft: 16,
+          paddingLeft: 4,
+          backgroundColor: "#B22222",
         }}
       >
         <View
           style={{
             justifyContent: "center",
             alignItems: "center",
-            backgroundColor: "#ff0000",
+            backgroundColor: "#B22222",
             paddingHorizontal: 8,
             paddingVertical: 12,
             borderRadius: 10,
@@ -73,7 +236,7 @@ export default function Cart({ navigation }) {
     );
   };
   return (
-    <View>
+    <View style={{ height: "98%" }}>
       <View style={styles.return}>
         <View style={styles.returnIcon}>
           <TouchableOpacity
@@ -86,79 +249,374 @@ export default function Cart({ navigation }) {
         </View>
         <Text style={styles.returnText}>Giỏ hàng</Text>
       </View>
-      <View style={{ height: "92%" }}>
-        <FlatList
-          data={cartItemList}
-          showsHorizontalScrollIndicator={false}
-          renderItem={({ item, index }) => (
-            <View style={{ marginTop: 8, marginLeft: 12, marginRight: 12 }}>
-              <Swipeable
-                renderRightActions={() => renderRightActions(item.modelId)}
-              >
-                <View
-                  style={{
-                    flexDirection: "row",
-                    padding: 16,
-                    backgroundColor: "#ffffff",
-                    borderRadius: 16,
+      <ScrollView style={{ marginBottom: 65 }}>
+        <View>
+          {cartItemList.map((item, index) => (
+            <View
+              key={index}
+              style={{
+                marginTop: 8,
+                paddingLeft: 12,
+                marginRight: 12,
+              }}
+            >
+              <Swipeable renderRightActions={() => renderRightActions(item)}>
+                <TouchableOpacity
+                  onPress={() => {
+                    navigation.navigate("shopDetailScreen", {
+                      modelId: item.modelId,
+                      modelPrice: item.modelPrice,
+                      modelStockAmount: item.modelAvailableInstockAmount,
+                    });
                   }}
                 >
-                  <View>
-                    <Image
-                      source={{
-                        uri: item.modelImagePath
-                          ? item.modelImagePath
-                          : "https://icon-library.com/images/image-icon-png/image-icon-png-6.jpg",
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      paddingVertical: 16,
+                      backgroundColor: "#ffffff",
+                    }}
+                  >
+                    <CheckBox
+                      key={index}
+                      checked={checkedItems.some(
+                        (itemA) =>
+                          itemA.modelId === item.modelId &&
+                          itemA.productId === item.productId
+                      )}
+                      disabled={item.availableInstockAmount > 0 ? false : true}
+                      // checked={
+                      //   item.availableInstockAmount > 0
+                      //     ? checkedItems.some(
+                      //         (itemA) =>
+                      //           itemA.modelId === item.modelId &&
+                      //           itemA.productId === item.productId
+                      //       )
+                      //     : false
+                      // }
+                      onPress={() => handleCheck(item.modelId, item.productId)}
+                      size={30}
+                      checkedColor="#ff0000"
+                      containerStyle={{
+                        padding: 0,
+                        justifyContent: "center",
+                        marginLeft: 16,
                       }}
-                      style={{ width: 90, height: 90, borderRadius: 15 }}
                     />
-                  </View>
-                  <View
-                    style={{
-                      justifyContent: "center",
-                      paddingLeft: 12,
-                    }}
-                  >
-                    <Text
-                      style={{ fontSize: 16, fontWeight: "bold", padding: 5 }}
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        flex: 5,
+                      }}
                     >
-                      {item.modelName}
-                    </Text>
-                    <Text
-                      style={{ fontSize: 16, color: "#FF0000", padding: 5 }}
+                      <View>
+                        <Image
+                          source={{
+                            uri: item.modelImagePath
+                              ? item.modelImagePath
+                              : "https://icon-library.com/images/image-icon-png/image-icon-png-6.jpg",
+                          }}
+                          style={{
+                            width: 90,
+                            height: 90,
+                            borderRadius: 15,
+                          }}
+                        />
+                      </View>
+                      <View
+                        style={{
+                          justifyContent: "center",
+                          paddingLeft: 12,
+                        }}
+                      >
+                        <Text
+                          style={{
+                            fontSize: 16,
+                            fontWeight: "bold",
+                            paddingLeft: 4,
+                            paddingTop: 2,
+                          }}
+                        >
+                          {item.modelName}
+                        </Text>
+                        {item.productName ? (
+                          <Text
+                            style={{
+                              fontSize: 14,
+                              fontStyle: "italic",
+                              paddingLeft: 4,
+                            }}
+                          >
+                            {"Phân loại: " + item.productName}
+                          </Text>
+                        ) : null}
+                        <Text
+                          style={{
+                            fontSize: 14,
+                            fontStyle: "italic",
+                            paddingLeft: 4,
+                            paddingTop: 2,
+                          }}
+                        >
+                          {"Còn: " + item.availableInstockAmount}
+                        </Text>
+                        <View>
+                          {item.promotionProgramId !== null && (
+                            <View
+                              style={{
+                                flexDirection: "row",
+                              }}
+                            >
+                              <Text
+                                style={{
+                                  fontSize: 13,
+                                  color: "#000000",
+                                  paddingTop: 4,
+                                  paddingLeft: 4,
+                                  textDecorationLine: "line-through",
+                                }}
+                              >
+                                {"đ" + item.price.toLocaleString()}
+                              </Text>
+                              <Text
+                                style={{
+                                  fontSize: 14,
+                                  color: "#ff0000",
+                                  paddingTop: 4,
+                                  paddingLeft: 4,
+                                  fontWeight: "bold",
+                                }}
+                              >
+                                {item.isPercentValue === 1
+                                  ? "-" + item.value + "%"
+                                  : item.value + "đ"}
+                              </Text>
+                            </View>
+                          )}
+                          <Text
+                            style={{
+                              fontSize: 16,
+                              color: "#FF0000",
+                              paddingBottom: 4,
+                              paddingLeft: 4,
+                              paddingRight: 4,
+                            }}
+                          >
+                            {"đ" + item.discountValue.toLocaleString()}
+                          </Text>
+                        </View>
+                      </View>
+                    </View>
+                    <View
+                      style={{
+                        justifyContent: "flex-end",
+                        paddingLeft: 12,
+                        flex: 2,
+                      }}
                     >
-                      {"đ" + item.modelPrice.toLocaleString()}
-                    </Text>
+                      <NumericInput
+                        value={
+                          (quantityValue[`${item.productId}_${item.modelId}`] ||
+                            item.quantity) > item.availableInstockAmount
+                            ? item.availableInstockAmount
+                            : quantityValue[
+                                `${item.productId}_${item.modelId}`
+                              ] || item.quantity
+                        }
+                        onChange={(value) =>
+                          handleQuantityChange(
+                            value,
+                            item.modelId,
+                            item.productId
+                          )
+                        }
+                        totalWidth={85}
+                        totalHeight={30}
+                        minValue={1}
+                        maxValue={item.availableInstockAmount}
+                        step={1}
+                        valueType="real"
+                        rounded
+                        textColor="#000000"
+                        iconStyle={{ color: "white" }}
+                        rightButtonBackgroundColor="#CC0000"
+                        leftButtonBackgroundColor="#CC0000"
+                        containerStyle={{ borderWidth: 0.5 }}
+                        inputStyle={{ fontSize: 14 }}
+                      />
+                    </View>
                   </View>
-                  <View
-                    style={{
-                      justifyContent: "flex-end",
-                      paddingLeft: 12,
-                    }}
-                  >
-                    <NumericInput
-                      value={quantity}
-                      onChange={handleQuantityChange}
-                      totalWidth={85}
-                      totalHeight={30}
-                      minValue={0}
-                      step={1}
-                      valueType="real"
-                      rounded
-                      textColor="#000000"
-                      iconStyle={{ color: "white" }}
-                      rightButtonBackgroundColor="#CC0000"
-                      leftButtonBackgroundColor="#CC0000"
-                      containerStyle={{ borderWidth: 0.5 }}
-                      inputStyle={{ fontSize: 14 }}
-                    />
-                  </View>
-                </View>
+                </TouchableOpacity>
               </Swipeable>
             </View>
+          ))}
+        </View>
+        <View>
+          {suggestList && (
+            <View
+              style={{
+                marginTop: 10,
+                justifyContent: "center",
+                alignItems: "center",
+                flexDirection: "row",
+                backgroundColor: "#ffffff",
+              }}
+            >
+              <View
+                style={{
+                  borderStyle: "dashed",
+                  borderRadius: 1,
+                  borderWidth: 1,
+                  width: "100%",
+                  alignSelf: "center",
+                  borderColor: "#696969",
+                }}
+              />
+              <View
+                style={{
+                  justifyContent: "center",
+                  alignItems: "center",
+                  paddingVertical: 10,
+                  paddingHorizontal: 10,
+                }}
+              >
+                <Text style={{ color: "#696969" }}>Có thể bạn cũng thích</Text>
+              </View>
+              <View
+                style={{
+                  borderStyle: "dashed",
+                  borderRadius: 1,
+                  borderWidth: 1,
+                  width: "100%",
+                  alignSelf: "center",
+                  borderColor: "#696969",
+                }}
+              />
+            </View>
           )}
-        />
-      </View>
+          {suggestList && (
+            <View
+              style={{
+                zIndex: 2,
+                flexDirection: "row",
+                justifyContent: "center",
+                alignItems: "center",
+                flexWrap: "wrap",
+                marginTop: 5,
+              }}
+            >
+              {suggestList.map((item, index) => {
+                return (
+                  <TouchableOpacity
+                    key={index}
+                    onPress={() => {
+                      navigation.navigate("shopDetailScreen", {
+                        modelId: item.modelId,
+                        modelPrice: item.modelPrice,
+                        maingroupId: item.maingroupId,
+                        subgroupId: item.subgroupId,
+                        modelStockAmount: item.amount,
+                      });
+                    }}
+                  >
+                    <Card
+                      containerStyle={{
+                        marginLeft: 5,
+                        marginRight: 5,
+                        marginTop: 5,
+                        marginBottom: 5,
+                        width: 190,
+                        height: 270,
+                        borderWidth: 0,
+                        shadowColor: "#EEEEEE",
+                        shadowOffset: { width: 0, height: 0 },
+                        shadowOpacity: 0.8,
+                        shadowRadius: 2,
+                        alignItems: "center",
+                      }}
+                    >
+                      <View>
+                        <View
+                          style={{
+                            justifyContent: "center",
+                            alignItems: "center",
+                          }}
+                        >
+                          <Image
+                            source={{
+                              uri: item.modelImagePath
+                                ? item.modelImagePath
+                                : "https://icon-library.com/images/image-icon-png/image-icon-png-6.jpg",
+                            }}
+                            style={{
+                              width: 150,
+                              height: 150,
+                              marginLeft: 0,
+                              marginRight: 0,
+                              borderRadius: 10,
+                            }}
+                          />
+                          <View style={{ marginTop: 20 }}>
+                            <Text
+                              style={{
+                                width: 170,
+                                textAlign: "center",
+                                fontSize: 15,
+                              }}
+                            >
+                              {item.modelName}
+                            </Text>
+                          </View>
+                          {item.promotionProgramId !== null && (
+                            <View
+                              style={{
+                                flexDirection: "row",
+                                justifyContent: "center",
+                                alignItems: "center",
+                              }}
+                            >
+                              <Text
+                                style={{
+                                  fontSize: 15,
+                                  textDecorationLine: "line-through",
+                                }}
+                              >
+                                {"đ" + item.modelPrice.toLocaleString()}
+                              </Text>
+                              <Text
+                                style={{
+                                  fontSize: 16,
+                                  color: "#ff0000",
+                                  paddingLeft: 4,
+                                }}
+                              >
+                                {item.isPercentValue === 1
+                                  ? "-" + item.value + "%"
+                                  : "-" + item.value}
+                              </Text>
+                            </View>
+                          )}
+                          <View>
+                            <Text
+                              style={{
+                                fontSize: 17,
+                                fontWeight: "bold",
+                                color: "#ff0000",
+                              }}
+                            >
+                              {"đ" + item.discountValue.toLocaleString()}
+                            </Text>
+                          </View>
+                        </View>
+                      </View>
+                    </Card>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          )}
+        </View>
+      </ScrollView>
       <View
         style={{
           position: "absolute",
@@ -170,7 +628,6 @@ export default function Cart({ navigation }) {
         <View
           style={{
             backgroundColor: "#ffffff",
-            marginBottom: 30,
             flexDirection: "row",
             justifyContent: "flex-end",
           }}
@@ -194,10 +651,11 @@ export default function Cart({ navigation }) {
                   textAlign: "right",
                 }}
               >
-                đ10.000.000
+                {total.toLocaleString()}
               </Text>
             </View>
           </View>
+
           <View
             style={{
               paddingLeft: 20,
@@ -205,7 +663,13 @@ export default function Cart({ navigation }) {
             }}
           >
             <TouchableOpacity
-              onPress={() => {}}
+              onPress={() => {
+                navigation.navigate("orderScreen", {
+                  listItem: checkedItems,
+                  total: total,
+                });
+                //console.log(checkedItems);
+              }}
               style={{
                 justifyContent: "center",
                 alignItems: "center",
@@ -223,9 +687,7 @@ export default function Cart({ navigation }) {
         <View
           style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
         >
-          <View
-            style={{ backgroundColor: "white", padding: 10, borderRadius: 5 }}
-          >
+          <View style={{ padding: 10, borderRadius: 5 }}>
             <ActivityIndicator size="large" />
             <Text style={{ marginTop: 10 }}>Loading...</Text>
           </View>

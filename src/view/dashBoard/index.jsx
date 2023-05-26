@@ -6,6 +6,7 @@ import Profile from "../profile";
 import Cart from "../cart";
 import Shop from "../shop";
 import Notify from "../notify";
+import Promotion from "../promotion";
 // import CLHomeScreen from "../CLHome/CLHomeScreen";
 // import CLFoodsScreen from "../CLFoods/CLFoodsScreen";
 // import CLProductScreen from "../CLProducts/CLProductScreen";
@@ -34,8 +35,8 @@ const DashBoard = ({ route, navigation }) => {
             iconName = focused ? "home-sharp" : "home-outline";
           } else if (route.name === "Cửa hàng") {
             iconName = focused ? "grid-sharp" : "grid-outline";
-            // } else if (route.name === "Giỏ hàng") {
-            //   iconName = focused ? "cart-sharp" : "cart-outline";
+          } else if (route.name === "Khuyến mãi") {
+            iconName = focused ? "gift-sharp" : "gift-outline";
           } else if (route.name === "Cá nhân") {
             iconName = focused ? "people-sharp" : "people-outline";
           } else if (route.name === "Sản phẩm") {
@@ -62,12 +63,12 @@ const DashBoard = ({ route, navigation }) => {
         //initialParams={{ userData }}
         options={{ headerShown: false }}
       />
-      {/* <Tab.Screen
-        name="Giỏ hàng"
-        component={Cart}
+      <Tab.Screen
+        name="Khuyến mãi"
+        component={Promotion}
         //initialParams={{ userData }}
         options={{ headerShown: false }}
-      /> */}
+      />
       <Tab.Screen
         name="Thông báo"
         component={Notify}

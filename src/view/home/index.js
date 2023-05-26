@@ -10,6 +10,8 @@ import {
   FlatList,
   TextInput,
   KeyboardAvoidingView,
+  ActivityIndicator,
+  Alert,
 } from "react-native";
 import {
   Avatar,
@@ -26,9 +28,17 @@ import AntDesign from "react-native-vector-icons/AntDesign";
 import { Card } from "react-native-elements";
 import Modal from "react-native-modal";
 import { PanGestureHandler } from "react-native-gesture-handler";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import DeckSwiper from "react-native-deck-swiper";
 import NumericInput from "react-native-numeric-input";
+import { useIsFocused } from "@react-navigation/native";
 import { getAllMainGroup } from "../../helper/controller/mainGroup";
+import { getModelByMainGroup } from "../../helper/controller/shop";
+import { getBannerAPI } from "../../helper/controller/promotion";
+import {
+  getAllModelFavForCustomer,
+  updateModelFav,
+} from "../../helper/controller/customerFav";
 const CardA = ({ imageUri }) => {
   return (
     <View style={styles.card}>
@@ -38,15 +48,32 @@ const CardA = ({ imageUri }) => {
 };
 export default function Home({ navigation, route }) {
   //const { userData } = route.params;
+  const [account, setAccount] = useState(null);
+  const [favItems, setFavItems] = useState([]);
+  const isFocused = useIsFocused();
   const [data, setData] = useState([]);
+  const [visible, setVisible] = useState(false);
   const [dataSearch, setDataSearch] = React.useState({
     textSearch: "",
   });
+  const [isShowLoadingModel, setIsShowLoadingModel] = useState(false);
+  const [isFav, setIsFav] = useState(0);
   const [isVisible, setIsVisible] = useState(false);
   //const [cards, setCards] = useState(images);
   const [selected, setSelected] = useState({});
   const [quantity, setQuantity] = useState(1);
   const [mainGroup, setMainGroup] = useState([]);
+  const [modelList, setModelList] = useState([]);
+  //console.log(modelList);
+  modelList.sort((a, b) => a.brandId - b.brandId);
+  const groupedModels = modelList.reduce((result, model) => {
+    const brandId = model.brandId;
+    if (!result[brandId]) {
+      result[brandId] = [];
+    }
+    result[brandId].push(model);
+    return result;
+  }, {});
 
   const handleSelect = (group, valueId) => {
     setSelected((prevSelected) => ({ ...prevSelected, [group]: valueId }));
@@ -55,12 +82,11 @@ export default function Home({ navigation, route }) {
   const handleQuantityChange = (value) => {
     setQuantity(value);
   };
-
-  // const onSwipeLeft = (index) => {
-  //   const newCards = cards.slice();
-  //   newCards.splice(index, 1);
-  //   setCards(newCards);
-  // };
+  const getAccount = async () => {
+    const accountFromStorage = await AsyncStorage.getItem("account");
+    setAccount(JSON.parse(accountFromStorage));
+    //getAccountInfo(accountFromStorage);
+  };
 
   const renderCard = (cards, index) => {
     return <CardA imageUri={cards.url} />;
@@ -70,6 +96,8 @@ export default function Home({ navigation, route }) {
     // handle gesture here
   };
 
+  const [bannerList, setBannerList] = useState([]);
+  //console.log(bannerList);
   const carouselItems = [
     {
       url: "https://vietmartjp.com/wp-content/uploads/2020/10/thumbnail-khuyen-mai-chong-khuyen-maiArtboard-1.jpg",
@@ -82,194 +110,73 @@ export default function Home({ navigation, route }) {
       url: "https://www.sonha.net.vn/media/news/0310_khuyen-mai-son-ha-10-10.jpg",
     },
   ];
-  const catList = [
-    {
-      url: "https://suckhoedoisong.qltns.mediacdn.vn/324455921873985536/2022/8/23/trai-cay-1661273148441334609720.jpg",
-      name: "Trái cây",
-    },
-    {
-      url: "https://bizweb.dktcdn.net/thumb/large/100/399/392/products/ao-polo-nam-cao-cap-hiddle-h7-t7.jpg?v=1665028849000",
-      name: "Trái cây",
-    },
-    {
-      url: "https://tietkiemdiennang.net/wp-content/uploads/2020/08/dien-lanh-la-gi-2-scaled.jpg",
-      name: "Trái cây",
-    },
-    {
-      url: "https://www.sonha.net.vn/media/news/0310_khuyen-mai-son-ha-10-10.jpg",
-      name: "Trái cây",
-    },
-
-    {
-      url: "https://suckhoedoisong.qltns.mediacdn.vn/324455921873985536/2022/8/23/trai-cay-1661273148441334609720.jpg",
-      name: "Trái cây",
-    },
-    {
-      url: "https://bizweb.dktcdn.net/thumb/large/100/399/392/products/ao-polo-nam-cao-cap-hiddle-h7-t7.jpg?v=1665028849000",
-      name: "Trái cây",
-    },
-    {
-      url: "https://tietkiemdiennang.net/wp-content/uploads/2020/08/dien-lanh-la-gi-2-scaled.jpg",
-      name: "Trái cây",
-    },
-    {
-      url: "https://www.sonha.net.vn/media/news/0310_khuyen-mai-son-ha-10-10.jpg",
-      name: "Trái cây",
-    },
-
-    {
-      url: "https://suckhoedoisong.qltns.mediacdn.vn/324455921873985536/2022/8/23/trai-cay-1661273148441334609720.jpg",
-      name: "Trái cây",
-    },
-    {
-      url: "https://bizweb.dktcdn.net/thumb/large/100/399/392/products/ao-polo-nam-cao-cap-hiddle-h7-t7.jpg?v=1665028849000",
-      name: "Trái cây",
-    },
-    {
-      url: "https://tietkiemdiennang.net/wp-content/uploads/2020/08/dien-lanh-la-gi-2-scaled.jpg",
-      name: "Trái cây",
-    },
-    {
-      url: "https://www.sonha.net.vn/media/news/0310_khuyen-mai-son-ha-10-10.jpg",
-      name: "Trái cây",
-    },
-
-    {
-      url: "https://suckhoedoisong.qltns.mediacdn.vn/324455921873985536/2022/8/23/trai-cay-1661273148441334609720.jpg",
-      name: "Trái cây",
-    },
-
-    {
-      url: "https://tietkiemdiennang.net/wp-content/uploads/2020/08/dien-lanh-la-gi-2-scaled.jpg",
-      name: "Trái cây",
-    },
-    {
-      url: "https://www.sonha.net.vn/media/news/0310_khuyen-mai-son-ha-10-10.jpg",
-      name: "Trái cây",
-    },
-  ];
-  const FavItems = [
-    {
-      url: "https://vietmartjp.com/wp-content/uploads/2020/10/thumbnail-khuyen-mai-chong-khuyen-maiArtboard-1.jpg",
-      name: "Trái xoài",
-      price: "100000",
-      priceEdit: "80000",
-    },
-    {
-      url: "https://vietmartjp.com/wp-content/uploads/2020/10/thumbnail-khuyen-mai-chong-khuyen-maiArtboard-1.jpg",
-      name: "Trái xoài",
-      price: "100000",
-      priceEdit: "80000",
-    },
-    {
-      url: "https://vietmartjp.com/wp-content/uploads/2020/10/thumbnail-khuyen-mai-chong-khuyen-maiArtboard-1.jpg",
-      name: "Trái xoài",
-      price: "100000",
-      priceEdit: "80000",
-    },
-    {
-      url: "https://vietmartjp.com/wp-content/uploads/2020/10/thumbnail-khuyen-mai-chong-khuyen-maiArtboard-1.jpg",
-      name: "Trái xoài",
-      price: "100000",
-      priceEdit: "80000",
-    },
-    {
-      url: "https://vietmartjp.com/wp-content/uploads/2020/10/thumbnail-khuyen-mai-chong-khuyen-maiArtboard-1.jpg",
-      name: "Trái xoài",
-      price: "100000",
-      priceEdit: "80000",
-    },
-  ];
-  const varriant = [
-    {
-      group: 1,
-      name: "Màu sắc",
-      value: [
-        {
-          valueId: 1,
-          valueName: "Đen",
-        },
-        {
-          valueId: 2,
-          valueName: "Trắng",
-        },
-        {
-          valueId: 3,
-          valueName: "Vàng",
-        },
-        {
-          valueId: 4,
-          valueName: "Xanh",
-        },
-        {
-          valueId: 5,
-          valueName: "Xanh ngọc",
-        },
-        {
-          valueId: 6,
-          valueName: "Xám",
-        },
-      ],
-    },
-    {
-      group: 2,
-      name: "Dung lượng",
-      value: [
-        {
-          valueId: 1,
-          valueName: "64GB",
-        },
-        {
-          valueId: 2,
-          valueName: "128GB",
-        },
-        {
-          valueId: 3,
-          valueName: "256GB",
-        },
-      ],
-    },
-    {
-      group: 3,
-      name: "Độ mới",
-      value: [
-        {
-          valueId: 1,
-          valueName: "90%",
-        },
-        {
-          valueId: 2,
-          valueName: "99%",
-        },
-      ],
-    },
-  ];
-
-  // const fetchdata = async () => {
-  //   const result = await getInfo(userData);
-  //   if (result.status == 200) {
-  //     setData(result.data.information);
-  //   }
-  // };
   const textInputChange = (val) => {
     setDataSearch({
       ...dataSearch,
       textSearch: val,
     });
   };
-  const addToCart = () => {
-    console.log(selected);
-  };
 
   const getAllMainGroupForApp = async () => {
+    setVisible(true);
     const result = await getAllMainGroup();
     if (result.status === 200) {
+      setVisible(false);
       setMainGroup(result.data.data.maingroups);
+    } else {
+      setVisible(false);
+    }
+  };
+  const getFavModel = async (customerId) => {
+    const result = await getAllModelFavForCustomer(customerId);
+    if (result.status === 200) {
+      {
+        setFavItems(result.data.data.modelList);
+      }
+    }
+  };
+
+  const updateModelFavDetail = async (customerId, modelId, isActived) => {
+    const result = await updateModelFav(customerId, modelId, isActived);
+    if (result.status === 200) {
+      //Alert.alert("Thông báo", "Thêm thành công");
+      getFavModel(account);
+    } else {
+      Alert.alert("Thông báo", "Có lỗi");
+    }
+  };
+  const handleFav = (item) => {
+    updateModelFavDetail(account, item.modelId, !item.isActived);
+
+    //console.log(account, item.modelId, item.isActived);
+  };
+  const getModelListGroupByBrand = async () => {
+    const result = await getModelByMainGroup(null, null, null, 50);
+    if (result.status === 200) {
+      setModelList(result.data.data.modelList);
+      setIsShowLoadingModel(false);
+    }
+  };
+  const setTime = () => {
+    setTimeout(() => {
+      setIsShowLoadingModel(true);
+    }, 5000);
+  };
+  const getBannerList = async () => {
+    const result = await getBannerAPI(1, null);
+    //console.log(result);
+    if (result.status === 200) {
+      setBannerList(result.data.data);
     }
   };
   useEffect(() => {
+    getBannerList();
     getAllMainGroupForApp();
-  }, []);
+    getAccount();
+    setTime();
+    getFavModel(account);
+    getModelListGroupByBrand();
+  }, [isFocused]);
   return (
     <ScrollView showsVerticalScrollIndicator={false}>
       <View style={styles.containerTitle}>
@@ -294,9 +201,11 @@ export default function Home({ navigation, route }) {
             />
             <TouchableOpacity
               onPress={() => {
-                navigation.navigate("productSearch", {
-                  keyWord: dataSearch.textSearch,
-                });
+                if (dataSearch.textSearch.length > 0) {
+                  navigation.navigate("productSearch", {
+                    keyWord: dataSearch.textSearch,
+                  });
+                }
               }}
             >
               <View style={styles.iconSearch}>
@@ -335,42 +244,54 @@ export default function Home({ navigation, route }) {
               marginRight: 20,
               marginTop: 0,
               zIndex: 1,
-
               flex: 0,
             }}
           >
-            <DeckSwiper
-              cards={carouselItems}
-              verticalSwipe={false}
-              renderCard={(card) => (
-                <View
-                  style={{ justifyContent: "center", alignItems: "center" }}
-                >
-                  <Image
-                    style={{
-                      width: 380,
-                      height: 200,
-                      borderRadius: 10,
+            {bannerList.length !== 0 && (
+              <DeckSwiper
+                cards={bannerList}
+                verticalSwipe={false}
+                renderCard={(item, index) => (
+                  <TouchableOpacity
+                    key={index}
+                    onPress={() => {
+                      navigation.navigate("promotionDetail", {
+                        promotionProgram: item,
+                      });
+                      //console.log(item.promotionProgramId);
                     }}
-                    source={{ uri: card.url }}
-                  />
-                </View>
-              )}
-              //onSwipedLeft={onSwipeLeft}
-              backgroundColor={"transparent"}
-              stackSize={3}
-              cardIndex={0}
-              // useViewOverflow={false}
-              infinite={true}
-              cardVerticalMargin={20}
-              cardVerticalThreshold={10}
-              containerStyle={{
-                marginTop: -10,
-              }}
-            />
+                    activeOpacity={0.8}
+                    style={{ justifyContent: "center", alignItems: "center" }}
+                  >
+                    <Image
+                      style={{
+                        width: 380,
+                        height: 200,
+                        borderRadius: 10,
+                      }}
+                      source={{
+                        uri: item.bannerImagePath,
+                      }}
+                    />
+                    {/* <Text>{item.promotionProgramName}</Text> */}
+                  </TouchableOpacity>
+                )}
+                //onSwipedLeft={onSwipeLeft}
+                backgroundColor={"transparent"}
+                stackSize={bannerList.length > 2 ? 2 : bannerList.length}
+                cardIndex={0}
+                // useViewOverflow={false}
+                infinite={true}
+                cardVerticalMargin={20}
+                cardVerticalThreshold={0}
+                containerStyle={{
+                  marginTop: -10,
+                }}
+              />
+            )}
           </View>
 
-          <View
+          {/* <View
             style={{
               flexDirection: "row",
               paddingHorizontal: 25,
@@ -395,64 +316,13 @@ export default function Home({ navigation, route }) {
             >
               <Text style={{ fontSize: 15 }}>Tất cả</Text>
             </TouchableOpacity>
-          </View>
-          <View
-            style={{
-              marginLeft: 20,
-              marginRight: 20,
-              marginTop: 10,
-              zIndex: 2,
-            }}
-          >
-            <FlatList
-              data={mainGroup}
-              horizontal={true}
-              showsHorizontalScrollIndicator={false}
-              renderItem={({ item, index }) => {
-                return (
-                  <TouchableOpacity
-                    onPress={() => {}}
-                    key={index}
-                    style={{
-                      paddingLeft: 5,
-                      paddingRight: 5,
-                      marginTop: 5,
-                      alignItems: "center",
-                      flexWrap: "wrap",
-                    }}
-                  >
-                    <Image
-                      source={{
-                        uri: item.maingroupImagePath
-                          ? item.maingroupImagePath
-                          : "https://icon-library.com/images/image-icon-png/image-icon-png-6.jpg",
-                      }}
-                      // source={{
-                      //   uri: item.maingroupImagePath,
-                      // }}
-                      style={{ width: 70, height: 70, borderRadius: 15 }}
-                    />
-                    <Text
-                      style={{
-                        fontWeight: "bold",
-                        marginTop: 5,
-                        width: 85,
-                        display: "flex",
-                        textAlign: "center",
-                      }}
-                    >
-                      {item.maingroupName}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              }}
-            />
-          </View>
+          </View> */}
+
           <View
             style={{
               flexDirection: "row",
               paddingHorizontal: 25,
-              marginTop: 10,
+              marginTop: 250,
               zIndex: 2,
             }}
           >
@@ -479,12 +349,22 @@ export default function Home({ navigation, route }) {
             }}
           >
             <FlatList
-              data={FavItems}
+              data={favItems}
               horizontal={true}
               showsHorizontalScrollIndicator={false}
               renderItem={({ item, index }) => {
                 return (
-                  <View>
+                  <TouchableOpacity
+                    onPress={() => {
+                      navigation.navigate("shopDetailScreen", {
+                        modelId: item.modelId,
+                        modelPrice: item.modelPrice,
+                        maingroupId: item.maingroupId,
+                        subgroupId: item.subgroupId,
+                        modelStockAmount: item.amount,
+                      });
+                    }}
+                  >
                     <View
                       style={{
                         zIndex: 1,
@@ -526,22 +406,45 @@ export default function Home({ navigation, route }) {
                       key={index}
                       containerStyle={{ borderRadius: 10, marginLeft: 1 }}
                     >
-                      <View>
+                      <View
+                        style={{
+                          justifyContent: "center",
+                          alignItems: "center",
+                        }}
+                      >
                         <Image
                           source={{
-                            uri: item.url,
+                            uri: item.modelImagePath
+                              ? item.modelImagePath
+                              : "https://icon-library.com/images/image-icon-png/image-icon-png-6.jpg",
                           }}
-                          style={{ width: 170, height: 150, borderRadius: 10 }}
+                          style={{
+                            width: 150,
+                            height: 150,
+                            marginLeft: 0,
+                            marginRight: 0,
+                            borderRadius: 10,
+                          }}
                         />
                       </View>
-                      <Card.Title style={{ fontSize: 18, marginTop: 10 }}>
-                        {item.name}
+                      <Card.Title
+                        style={{
+                          fontSize: 16,
+                          marginTop: 10,
+                          maxWidth: 150,
+                          whiteSpace: "nowrap",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                        }}
+                      >
+                        {item.modelName.length > 15
+                          ? `${item.modelName.slice(0, 15)}...`
+                          : item.modelName}
                       </Card.Title>
 
                       <View
                         style={{
                           flexDirection: "row",
-
                           alignItems: "center",
                         }}
                       >
@@ -553,65 +456,37 @@ export default function Home({ navigation, route }) {
                             textDecorationLine: "line-through",
                           }}
                         >
-                          {item.price + "đ"}
+                          {item.modelPrice + "đ"}
                         </Text>
                       </View>
-                      <View
-                        style={{
-                          flexDirection: "row",
-                          marginLeft: 5,
-                          justifyContent: "space-between",
-                          alignItems: "center",
-                        }}
-                      >
-                        <View>
-                          <View
+
+                      <View>
+                        <View
+                          style={{
+                            flexDirection: "row",
+                            alignItems: "center",
+                          }}
+                        >
+                          <Entypo
+                            name="price-ribbon"
+                            color="#FF0000"
+                            size={20}
+                          />
+                          <Text
                             style={{
-                              flexDirection: "row",
-                              alignItems: "center",
+                              fontSize: 22,
+                              color: "#FF0000",
                             }}
                           >
-                            <Entypo
-                              name="price-ribbon"
-                              color="#FF0000"
-                              size={20}
-                            />
-                            <Text
-                              style={{
-                                marginLeft: 2,
-                                fontSize: 22,
-                                color: "#FF0000",
-                              }}
-                            >
-                              {item.priceEdit + "đ"}
-                            </Text>
-                          </View>
-                          <Text style={{ fontStyle: "italic" }}>
-                            Còn lại: 121
+                            {item.modelPrice + "đ"}
                           </Text>
                         </View>
-                        <TouchableOpacity onPress={() => setIsVisible(true)}>
-                          <View
-                            style={{
-                              backgroundColor: "#FF0000",
-                              marginRight: 5,
-                              width: 45,
-                              height: 45,
-                              justifyContent: "center",
-                              alignItems: "center",
-                              borderRadius: 5,
-                            }}
-                          >
-                            <Feather
-                              name="shopping-cart"
-                              color="#ffffff"
-                              size={30}
-                            />
-                          </View>
-                        </TouchableOpacity>
+                        <Text style={{ fontStyle: "italic" }}>
+                          Còn lại: 121
+                        </Text>
                       </View>
                     </Card>
-                  </View>
+                  </TouchableOpacity>
                 );
               }}
             />
@@ -647,205 +522,286 @@ export default function Home({ navigation, route }) {
               zIndex: 2,
             }}
           >
-            {FavItems.map((item, index) => {
-              return (
-                <View key={index}>
-                  <Card containerStyle={{ borderRadius: 10 }}>
-                    <View style={{ flexDirection: "row" }}>
-                      <View style={{ flex: 2 }}>
-                        <Image
-                          source={{
-                            uri: item.url,
-                          }}
-                          style={{ width: 100, height: 100, borderRadius: 10 }}
-                        />
-                      </View>
-                      <View style={{ flex: 3 }}>
-                        <View style={{ padding: 5 }}>
-                          <Text style={{ fontSize: 16, fontWeight: "bold" }}>
-                            {item.name}
-                          </Text>
-                          <Text style={{ fontStyle: "italic" }}>
-                            Còn lại: 12
-                          </Text>
+            {favItems &&
+              favItems.map((item, index) => {
+                return (
+                  <TouchableOpacity
+                    onPress={() => {
+                      navigation.navigate("shopDetailScreen", {
+                        modelId: item.modelId,
+                        modelPrice: item.modelPrice,
+                        maingroupId: item.maingroupId,
+                        subgroupId: item.subgroupId,
+                        modelStockAmount: item.amount,
+                      });
+                    }}
+                    key={index}
+                  >
+                    <Card
+                      containerStyle={{
+                        borderRadius: 10,
+                        marginTop: 8,
+                        borderWidth: 0,
+                        shadowColor: "#dddddd",
+                        shadowOffset: { width: 0, height: 0 },
+                        shadowOpacity: 0.8,
+                        shadowRadius: 2,
+                      }}
+                    >
+                      <View style={{ flexDirection: "row" }}>
+                        <View style={{ flex: 2 }}>
+                          <Image
+                            source={{
+                              uri: item.modelImagePath,
+                            }}
+                            style={{
+                              width: 100,
+                              height: 100,
+                              borderRadius: 10,
+                            }}
+                          />
                         </View>
                         <View
                           style={{
-                            padding: 5,
-                            flexDirection: "row",
-                            alignItems: "flex-end",
-                          }}
-                        >
-                          <Text>Giá:</Text>
-                          <Text style={{ fontSize: 18, color: "#FF0000" }}>
-                            {item.price + "đ"}
-                          </Text>
-                        </View>
-                      </View>
-                      <View
-                        style={{
-                          flex: 1,
-                          alignItems: "flex-end",
-                          justifyContent: "flex-end",
-                        }}
-                      >
-                        <TouchableOpacity
-                          onPress={() => setIsVisible(true)}
-                          style={{
-                            backgroundColor: "#FF0000",
-                            marginRight: 5,
-                            width: 45,
-                            height: 45,
+                            flex: 3,
                             justifyContent: "center",
-                            alignItems: "center",
-                            borderRadius: 5,
                           }}
                         >
-                          <Feather
-                            name="shopping-cart"
-                            color="#ffffff"
-                            size={25}
-                          />
-                        </TouchableOpacity>
-                      </View>
-                    </View>
-                  </Card>
-                </View>
-              );
-            })}
-          </View>
-          <View style={styles.container}>
-            <Modal
-              isVisible={isVisible}
-              onSwipeComplete={() => {
-                setIsVisible(false);
-                setSelected({});
-                setQuantity(1);
-              }}
-              swipeDirection={["down"]}
-              style={styles.modal}
-            >
-              <KeyboardAvoidingView behavior="padding">
-                <View style={styles.bottomSheet}>
-                  <View style={styles.paddingHandle}>
-                    <View style={styles.handle} />
-                  </View>
-                  <View
-                    style={{
-                      height: 120,
-                      backgroundColor: "#ffffff",
-                      marginTop: 1,
-                    }}
-                  >
-                    <Text>Huy</Text>
-                  </View>
-
-                  <View
-                    style={{
-                      padding: 10,
-                      backgroundColor: "#ffffff",
-                      marginTop: 1,
-                      justifyContent: "center",
-                    }}
-                  >
-                    {varriant.map((item, indexOption) => (
-                      <View key={item.group}>
-                        <View>
-                          <Text>{item.name}</Text>
+                          <View style={{ padding: 4 }}>
+                            <Text style={{ fontSize: 16, fontWeight: "bold" }}>
+                              {item.modelName}
+                            </Text>
+                          </View>
                           <View
-                            style={{ flexDirection: "row", flexWrap: "wrap" }}
+                            style={{
+                              flexDirection: "row",
+                              alignItems: "flex-end",
+                              padding: 4,
+                            }}
                           >
-                            {item.value.map((itemValue, indexValue) => (
-                              <View
-                                key={itemValue.valueId}
-                                style={{ padding: 5 }}
-                              >
-                                <Chip
-                                  key={itemValue.valueId}
-                                  style={{ paddingHorizontal: 15 }}
-                                  selected={
-                                    selected[item.group] === itemValue.valueId
-                                  }
-                                  onPress={() =>
-                                    //console.log(item.group, itemValue.valueId)
-                                    {
-                                      handleSelect(
-                                        item.group,
-                                        itemValue.valueId
-                                      );
-                                    }
-                                  }
-                                >
-                                  {itemValue.valueName}
-                                </Chip>
-                              </View>
-                            ))}
+                            <Text>Giá:</Text>
+                            <Text style={{ fontSize: 18, color: "#FF0000" }}>
+                              {"đ" + item.modelPrice.toLocaleString()}
+                            </Text>
                           </View>
                         </View>
+                        <View
+                          style={{
+                            flex: 1,
+                            alignItems: "flex-end",
+                            justifyContent: "center",
+                          }}
+                        >
+                          <TouchableOpacity
+                            onPress={() => handleFav(item)}
+                            style={{
+                              marginRight: 0,
+                              width: 45,
+                              height: 45,
+                              justifyContent: "center",
+                              alignItems: "center",
+                              borderRadius: 5,
+                            }}
+                          >
+                            <FontAwesome
+                              name="heart"
+                              color="#ff0000"
+                              size={30}
+                            />
+                          </TouchableOpacity>
+                        </View>
                       </View>
+                    </Card>
+                  </TouchableOpacity>
+                );
+              })}
+          </View>
+          <View>
+            {Object.keys(groupedModels).map((brandId) => (
+              <View
+                key={brandId}
+                style={{
+                  justifyContent: "center",
+                }}
+              >
+                <View
+                  style={{
+                    justifyContent: "center",
+                    alignItems: "center",
+                    marginTop: 20,
+                    backgroundColor: "#FF6347",
+                    paddingVertical: 8,
+                    marginHorizontal: 18,
+                  }}
+                >
+                  <Text
+                    style={{
+                      fontSize: 16,
+                      fontWeight: "bold",
+                      color: "#ffffff",
+                    }}
+                  >
+                    Thương hiệu
+                  </Text>
+                </View>
+                <View
+                  style={{
+                    marginHorizontal: 18,
+                    backgroundColor: "#FFE4E1",
+                    paddingTop: 4,
+                    paddingHorizontal: 3,
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <View
+                    style={{
+                      zIndex: 2,
+                      flexDirection: "row",
+                      flexWrap: "wrap",
+                      justifyContent: "space-between",
+                      paddingBottom: 5,
+                    }}
+                  >
+                    {groupedModels[brandId].map((item, index) => (
+                      <TouchableOpacity
+                        key={index}
+                        onPress={() => {
+                          navigation.navigate("shopDetailScreen", {
+                            modelId: item.modelId,
+                            modelPrice: item.modelPrice,
+                            maingroupId: item.maingroupId,
+                            subgroupId: item.subgroupId,
+                            modelStockAmount: item.amount,
+                          });
+                        }}
+                      >
+                        <Card
+                          containerStyle={{
+                            marginLeft: 5,
+                            marginRight: 5,
+                            marginTop: 5,
+                            marginBottom: 5,
+                            width: 175,
+                            height: 260,
+                            borderWidth: 0,
+                            shadowColor: "#EEEEEE",
+                            shadowOffset: { width: 0, height: 0 },
+                            shadowOpacity: 0.8,
+                            shadowRadius: 2,
+                            alignItems: "center",
+                          }}
+                        >
+                          <View>
+                            <View
+                              style={{
+                                justifyContent: "center",
+                                alignItems: "center",
+                              }}
+                            >
+                              <Image
+                                source={{
+                                  uri: item.modelImagePath
+                                    ? item.modelImagePath
+                                    : "https://icon-library.com/images/image-icon-png/image-icon-png-6.jpg",
+                                }}
+                                style={{
+                                  width: 150,
+                                  height: 150,
+                                  marginLeft: 0,
+                                  marginRight: 0,
+                                  borderRadius: 10,
+                                }}
+                              />
+                              <View style={{ marginTop: 20 }}>
+                                <Text
+                                  style={{
+                                    fontSize: 15,
+                                    textAlign: "center",
+                                    maxWidth: 160,
+                                    whiteSpace: "nowrap",
+                                    overflow: "hidden",
+                                    textOverflow: "ellipsis",
+                                  }}
+                                >
+                                  {item.modelName.length > 20
+                                    ? `${item.modelName.slice(0, 20)}...`
+                                    : item.modelName}
+                                </Text>
+                              </View>
+                              {item.promotionProgramId !== null && (
+                                <View
+                                  style={{
+                                    flexDirection: "row",
+                                    justifyContent: "center",
+                                    alignItems: "center",
+                                  }}
+                                >
+                                  <Text
+                                    style={{
+                                      fontSize: 15,
+                                      textDecorationLine: "line-through",
+                                    }}
+                                  >
+                                    {"đ" + item.modelPrice.toLocaleString()}
+                                  </Text>
+                                  <Text
+                                    style={{
+                                      fontSize: 16,
+                                      color: "#ff0000",
+                                      paddingLeft: 4,
+                                    }}
+                                  >
+                                    {item.isPercentValue === 1
+                                      ? "-" + item.value + "%"
+                                      : "-" + item.value}
+                                  </Text>
+                                </View>
+                              )}
+                              <View>
+                                <Text
+                                  style={{
+                                    fontSize: 17,
+                                    fontWeight: "bold",
+                                    color: "#ff0000",
+                                    paddingTop: 4,
+                                  }}
+                                >
+                                  {"đ" + item.discountValue.toLocaleString()}
+                                </Text>
+                              </View>
+                            </View>
+                          </View>
+                        </Card>
+                      </TouchableOpacity>
                     ))}
                   </View>
-                  <View
-                    style={{
-                      padding: 10,
-                      marginTop: 1,
-                      backgroundColor: "#ffffff",
-                    }}
-                  >
-                    <View>
-                      <Text>Chọn số lượng</Text>
-                    </View>
-                    <View
-                      style={{
-                        justifyContent: "flex-end",
-                        alignItems: "flex-end",
-                        marginRight: 20,
-                      }}
-                    >
-                      <NumericInput
-                        value={quantity}
-                        onChange={handleQuantityChange}
-                        totalWidth={100}
-                        totalHeight={30}
-                        minValue={1}
-                        step={1}
-                        valueType="real"
-                        rounded
-                        textColor="#000000"
-                        iconStyle={{ color: "white" }}
-                        rightButtonBackgroundColor="#ff0000"
-                        leftButtonBackgroundColor="#ff0000"
-                      />
-                    </View>
-                  </View>
-                  <View
-                    style={{
-                      padding: 10,
-                      marginTop: 1,
-                      backgroundColor: "#ffffff",
-                      marginBottom: 20,
-                    }}
-                  >
-                    <TouchableOpacity
-                      onPress={addToCart}
-                      style={{
-                        justifyContent: "center",
-                        alignItems: "center",
-                        padding: 15,
-                        backgroundColor: "#ff0000",
-                      }}
-                    >
-                      <Text style={{ fontSize: 16, color: "#ffffff" }}>
-                        Thêm vào giỏ hàng
-                      </Text>
-                    </TouchableOpacity>
-                  </View>
                 </View>
-              </KeyboardAvoidingView>
-            </Modal>
+              </View>
+            ))}
+            {isShowLoadingModel && (
+              <View>
+                <ActivityIndicator size="large" />
+              </View>
+            )}
           </View>
         </View>
       </View>
+      <Modal visible={visible} transparent={true}>
+        <View
+          style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
+        >
+          <View
+            style={{
+              padding: 10,
+              borderRadius: 5,
+            }}
+            transparent="30%"
+          >
+            <ActivityIndicator size="large" />
+          </View>
+        </View>
+      </Modal>
     </ScrollView>
   );
 }

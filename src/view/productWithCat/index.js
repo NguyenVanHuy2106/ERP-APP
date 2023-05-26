@@ -115,6 +115,9 @@ export default function ProductWithCat({ navigation, route }) {
                     navigation.navigate("shopDetailScreen", {
                       modelId: item.modelId,
                       modelPrice: item.modelPrice,
+                      maingroupId: item.maingroupId,
+                      subgroupId: item.subgroupId,
+                      modelStockAmount: item.amount,
                     });
                   }}
                 >
@@ -124,14 +127,14 @@ export default function ProductWithCat({ navigation, route }) {
                       marginRight: 5,
                       marginTop: 5,
                       marginBottom: 5,
-                      width: 180,
-                      height: 250,
-                      borderRadius: 10,
+                      width: 190,
+                      height: 270,
                       borderWidth: 0,
                       shadowColor: "#EEEEEE",
                       shadowOffset: { width: 0, height: 0 },
                       shadowOpacity: 0.8,
                       shadowRadius: 2,
+                      alignItems: "center",
                     }}
                   >
                     <View>
@@ -158,34 +161,59 @@ export default function ProductWithCat({ navigation, route }) {
                         <View style={{ marginTop: 20 }}>
                           <Text
                             style={{
-                              width: 170,
-                              textAlign: "center",
                               fontSize: 15,
+                              textAlign: "center",
+                              maxWidth: 160,
+                              whiteSpace: "nowrap",
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
                             }}
                           >
-                            {item.modelName}
+                            {item.modelName.length > 20
+                              ? `${item.modelName.slice(0, 20)}...`
+                              : item.modelName}
                           </Text>
                         </View>
-                      </View>
-                      <View
-                        style={{
-                          paddingTop: 8,
-                          flexDirection: "row",
-                          alignItems: "center",
-                          paddingLeft: 10,
-                        }}
-                      >
-                        <Text
-                          style={{
-                            width: 170,
-                            paddingLeft: 4,
-                            fontSize: 15,
-                            color: "#cc0000",
-                            fontWeight: "bold",
-                          }}
-                        >
-                          {"đ" + item.modelPrice.toLocaleString()}
-                        </Text>
+                        {item.promotionProgramId !== null && (
+                          <View
+                            style={{
+                              flexDirection: "row",
+                              justifyContent: "center",
+                              alignItems: "center",
+                            }}
+                          >
+                            <Text
+                              style={{
+                                fontSize: 15,
+                                textDecorationLine: "line-through",
+                              }}
+                            >
+                              {"đ" + item.modelPrice.toLocaleString()}
+                            </Text>
+                            <Text
+                              style={{
+                                fontSize: 16,
+                                color: "#ff0000",
+                                paddingLeft: 4,
+                              }}
+                            >
+                              {item.isPercentValue === 1
+                                ? "-" + item.value + "%"
+                                : "-" + item.value}
+                            </Text>
+                          </View>
+                        )}
+                        <View>
+                          <Text
+                            style={{
+                              fontSize: 17,
+                              fontWeight: "bold",
+                              color: "#ff0000",
+                            }}
+                          >
+                            {"đ" + item.discountValue.toLocaleString()}
+                          </Text>
+                        </View>
                       </View>
                     </View>
                   </Card>

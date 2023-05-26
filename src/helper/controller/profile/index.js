@@ -76,3 +76,23 @@ export const updateCusInfo = async (
     return err;
   }
 };
+
+export const countOrder = async (userLogIn) => {
+  try {
+    const response = await API.post(
+      "saleorder/get-saleorder-count",
+      {
+        userLogIn: userLogIn,
+        data: { customerId: userLogIn },
+      },
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    return response;
+  } catch (err) {
+    return err;
+  }
+};

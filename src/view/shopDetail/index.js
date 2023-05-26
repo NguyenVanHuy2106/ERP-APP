@@ -23,21 +23,30 @@ import {
 } from "react-native-paper";
 import { Card } from "react-native-elements";
 import Feather from "react-native-vector-icons/Feather";
+import AntDesign from "react-native-vector-icons/AntDesign";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import NumericInput from "react-native-numeric-input";
 import FontAwesome from "react-native-vector-icons/FontAwesome";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import Swiper from "react-native-swiper";
 import { getModelInfoAPI } from "../../helper/controller/shop";
+import { addToCart } from "../../helper/controller/cart";
 import {
   getModelByMainGroup,
   getProductIdByVarrant,
 } from "../../helper/controller/shop";
+import { updateModelFav } from "../../helper/controller/customerFav";
 import Modal from "react-native-modal";
 // import { ScrollView } from "react-native-gesture-handler";
 export default function ShopDetail({ navigation, route }) {
   let modelId = route.params.modelId;
+  //console.log(modelId);
   let modelPrice = route.params.modelPrice;
-
+  let modelStockAmount = route.params.modelStockAmount;
+  const [isFav, setIsFav] = useState(0);
+  const [maxStockLimit, setMaxStockLimit] = useState(modelStockAmount);
+  const [stockQuantity, setStockQuantity] = useState(modelStockAmount);
+  const [account, setAccount] = useState(null);
   let maingroupId = route.params.maingroupId;
   let subgroupId = route.params.subgroupId;
   const [productId, setProductId] = useState("");
@@ -65,7 +74,11 @@ export default function ShopDetail({ navigation, route }) {
   //console.log(varant);
 
   const [selectedChipId, setSelectedChipId] = useState(null); // Lưu trữ trạng thái được chọn của Chip
-
+  const getAccount = async () => {
+    const accountFromStorage = await AsyncStorage.getItem("account");
+    setAccount(JSON.parse(accountFromStorage));
+    getModelInfo(JSON.parse(accountFromStorage), modelId);
+  };
   const handleSelect = (indexOption, group, valueId) => {
     setSelected((prevSelected) => ({ ...prevSelected, [group]: valueId }));
     const updateSelection = {
@@ -92,7 +105,7 @@ export default function ShopDetail({ navigation, route }) {
         const newSelections = prevSelections.map((selection, i) =>
           i === index ? { ...selection, ...updateSelection } : selection
         );
-        //console.log("New selections:", newSelections);
+        console.log("New selections:", newSelections);
         if (newSelections.length === maxLevelVarantProduct) {
           getProductId(modelId, newSelections);
           //setPriceOfProductId(0);
@@ -102,7 +115,7 @@ export default function ShopDetail({ navigation, route }) {
       } else {
         // The attribute is not yet selected, add a new selection
         const newSelections = [...prevSelections, updateSelection];
-        //console.log("New selections:", newSelections);
+        console.log("New selections add:", newSelections);
         if (newSelections.length === maxLevelVarantProduct) {
           getProductId(modelId, newSelections);
           //setPriceOfProductId(0);
@@ -114,17 +127,16 @@ export default function ShopDetail({ navigation, route }) {
   };
   const getProductId = async (modelId, varant) => {
     //console.log(modelId, varant);
+    //console.log(modelId);
     setStatePrice(true);
     const result = await getProductIdByVarrant(modelId, varant);
-
+    //console.log(result);
     if (result.status === 200) {
       setStatePrice(false);
       //console.log(result.data.data.productId);
       setProductId(result.data.data.productId);
-      if (
-        result.data.data.priceOfProductId === -1 &&
-        result.data.data.priceOfModelId !== -1
-      ) {
+      setStockQuantity(result.data.data.amount);
+      if (result.data.data.isCreatedPriceOfProduct === false) {
         setPriceOfVarrant(result.data.data.priceOfModel);
         //console.log("modelId", result.data.data.priceOfModel);
       } else {
@@ -142,9 +154,11 @@ export default function ShopDetail({ navigation, route }) {
       setVisible(false);
     }, 1000);
   };
-  const getModelInfo = async (modelId) => {
+  const getModelInfo = async (account, modelId) => {
     setVisible(true);
-    const result = await getModelInfoAPI(modelId);
+    const result = await getModelInfoAPI(account, modelId);
+    //console.log(account, modelId);
+    //console.log(result);
     if (result.status == 200) {
       //console.log(result.data.modelInformation);
       //console.log(result.data.serverModel);
@@ -158,7 +172,7 @@ export default function ShopDetail({ navigation, route }) {
       setModelDescriptionAttribute(
         result.data.data.modelInformation.modelDescriptionAttribute
       );
-
+      setIsFav(result.data.data.modelInformation.isFavouriteModel);
       setImageList(result.data.data.modelInformation.modelImagePathList);
       getRelateModel(
         result.data.data.modelInformation.maingroupId,
@@ -178,9 +192,63 @@ export default function ShopDetail({ navigation, route }) {
     }
   };
 
+  const handleAddtoCart = async (productId, quantity) => {
+    // userLogIn,
+    // modelId,
+    // productId,
+    // subgroupId,
+    // brandId,
+    // quantity,
+    // inventoryStatusId
+    setVisible(true);
+    // console.log(
+    //   account,
+    //   modelId,
+    //   productId.length === 0 ? null : productId,
+    //   modelInfo.subgroupId,
+    //   modelInfo.brandId,
+    //   quantity
+    // );
+    const result = await addToCart(
+      account,
+      modelId,
+      productId.length === 0 ? null : productId,
+      modelInfo.subgroupId,
+      modelInfo.brandId,
+      quantity,
+      1
+    );
+    console.log(
+      account,
+      modelId,
+      productId.length === 0 ? null : productId,
+      modelInfo.subgroupId,
+      modelInfo.brandId,
+      quantity
+    );
+    if (result.status === 200) {
+      setVisible(false);
+      Alert.alert("Thông báo", "Thêm vào giỏ hàng thành công");
+      setIsVisible(false);
+    }
+  };
+
+  const updateModelFavDetail = async (customerId, modelId, isActived) => {
+    const result = await updateModelFav(customerId, modelId, isActived);
+    if (result.status === 200) {
+      Alert.alert("Thông báo", "Thêm thành công");
+    } else {
+      Alert.alert("Thông báo", "Có lỗi");
+    }
+  };
+  const handleFav = () => {
+    updateModelFavDetail(account, modelId, !isFav);
+    //console.log("Huy");
+  };
+
   useEffect(() => {
     //setTime();
-    getModelInfo(modelId);
+    getAccount();
   }, []);
 
   return (
@@ -197,8 +265,73 @@ export default function ShopDetail({ navigation, route }) {
         </View>
         <Text style={styles.returnText}>Chi tiết</Text>
       </View>
-
       <View>
+        <View
+          style={{
+            zIndex: 2,
+            position: "absolute",
+            top: 5,
+            left: 0,
+            right: 0,
+            justifyContent: "center",
+            alignItems: "flex-end",
+            backgroundColor: "rgba(211, 211, 211, 0.5)",
+          }}
+        >
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              marginHorizontal: 12,
+              marginVertical: 4,
+            }}
+          >
+            <TouchableOpacity
+              onPress={() => handleFav()}
+              style={{
+                borderWidth: 1,
+                borderRadius: 50,
+                marginHorizontal: 10,
+
+                borderColor: "#ff0000",
+              }}
+            >
+              {isFav === 0 ? (
+                <AntDesign
+                  name="hearto"
+                  size={25}
+                  color="#ff0000"
+                  style={{ padding: 5 }}
+                />
+              ) : (
+                <AntDesign
+                  name="heart"
+                  size={25}
+                  color="#ff0000"
+                  style={{ padding: 5 }}
+                />
+              )}
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => {
+                navigation.navigate("cartScreen");
+              }}
+              style={{
+                borderWidth: 1,
+                borderRadius: 50,
+                marginHorizontal: 10,
+                borderColor: "#ff0000",
+              }}
+            >
+              <AntDesign
+                name="shoppingcart"
+                size={25}
+                color="#ff0000"
+                style={{ padding: 5 }}
+              />
+            </TouchableOpacity>
+          </View>
+        </View>
         <ScrollView
           style={{ height: "87%" }}
           showsVerticalScrollIndicator={false}
@@ -210,6 +343,7 @@ export default function ShopDetail({ navigation, route }) {
                   backgroundColor: "#ffffff",
                   justifyContent: "center",
                   alignItems: "center",
+                  paddingTop: 10,
                 }}
               >
                 <Image
@@ -284,25 +418,44 @@ export default function ShopDetail({ navigation, route }) {
                 </Text>
                 <View
                   style={{
-                    marginRight: 20,
-                    marginTop: 4,
-                    justifyContent: "flex-end",
-                    alignItems: "center",
                     flexDirection: "row",
+
+                    justifyContent: "space-between",
+                    alignItems: "flex-end",
                   }}
                 >
-                  <Text
+                  <View
                     style={{
-                      fontSize: 26,
-                      color: "#ff0000",
-                      fontWeight: "bold",
+                      justifyContent: "flex-end",
+                      alignItems: "flex-end",
+
+                      paddingBottom: 2,
                     }}
                   >
-                    {modelPrice.toLocaleString()}
-                  </Text>
-                  <Text style={{ fontSize: 18, color: "#ff0000" }}>
-                    {" VNĐ"}
-                  </Text>
+                    <Text>{"Còn lại: " + modelStockAmount}</Text>
+                  </View>
+                  <View
+                    style={{
+                      marginRight: 20,
+                      marginTop: 4,
+                      justifyContent: "flex-end",
+                      alignItems: "center",
+                      flexDirection: "row",
+                    }}
+                  >
+                    <Text
+                      style={{
+                        fontSize: 26,
+                        color: "#ff0000",
+                        fontWeight: "bold",
+                      }}
+                    >
+                      {modelPrice.toLocaleString()}
+                    </Text>
+                    <Text style={{ fontSize: 18, color: "#ff0000" }}>
+                      {" VNĐ"}
+                    </Text>
+                  </View>
                 </View>
               </View>
             </View>
@@ -333,7 +486,7 @@ export default function ShopDetail({ navigation, route }) {
                           key={index}
                           onPress={() => {
                             setVisible(true);
-                            getModelInfo(item.modelId);
+                            getModelInfo(account, item.modelId);
                             getRelateModel(item.maingroupId, item.subgroupId);
                             // setVisible(true);
                             // navigation.navigate("shopDetailScreen", {
@@ -349,7 +502,7 @@ export default function ShopDetail({ navigation, route }) {
                               marginTop: 5,
                               marginBottom: 5,
                               width: 130,
-                              height: 190,
+                              height: 200,
                               borderRadius: 10,
                               borderWidth: 0,
                               backgroundColor: "#EEEEEE",
@@ -383,7 +536,7 @@ export default function ShopDetail({ navigation, route }) {
                                 <View style={{ marginTop: 20 }}>
                                   <Text
                                     style={{
-                                      width: 170,
+                                      width: 120,
                                       textAlign: "center",
                                       fontSize: 13,
                                       flexWrap: "wrap",
@@ -403,7 +556,7 @@ export default function ShopDetail({ navigation, route }) {
                               >
                                 <Text
                                   style={{
-                                    width: 170,
+                                    width: 200,
                                     paddingLeft: 0,
                                     fontSize: 15,
                                     color: "#cc0000",
@@ -626,6 +779,7 @@ export default function ShopDetail({ navigation, route }) {
                   setIsVisible(false);
                   setSelected({});
                   setQuantity(1);
+                  setVarrant([]);
                 }}
               >
                 <View
@@ -667,6 +821,18 @@ export default function ShopDetail({ navigation, route }) {
                   }}
                 />
                 <View style={{ paddingBottom: 10 }}>
+                  <View style={{ marginBottom: 10 }}>
+                    <Text
+                      style={{
+                        fontSize: 18,
+                        width: "90%",
+                        textAlign: "left",
+                        fontWeight: "bold",
+                      }}
+                    >
+                      {modelInfo.modelName}
+                    </Text>
+                  </View>
                   <View
                     style={{
                       flexDirection: "row",
@@ -676,7 +842,7 @@ export default function ShopDetail({ navigation, route }) {
                     {statePrice && (
                       <ActivityIndicator size="small" color="#ff0000" />
                     )}
-                    {priceOfVarrant && (
+                    {priceOfVarrant != 0 && priceOfVarrant != null && (
                       <Text
                         style={{
                           fontSize: 22,
@@ -689,9 +855,8 @@ export default function ShopDetail({ navigation, route }) {
                     )}
                     <Text style={{ color: "#FF0000" }}>VNĐ</Text>
                   </View>
-                  <View style={{ flexDirection: "row" }}>
-                    <Text>Kho:</Text>
-                    <Text style={{ paddingLeft: 4 }}>20</Text>
+                  <View>
+                    <Text>{"Kho: " + stockQuantity}</Text>
                   </View>
                 </View>
               </View>
@@ -843,6 +1008,7 @@ export default function ShopDetail({ navigation, route }) {
                     totalWidth={120}
                     totalHeight={35}
                     minValue={0}
+                    maxValue={stockQuantity}
                     step={1}
                     valueType="real"
                     rounded
@@ -861,7 +1027,7 @@ export default function ShopDetail({ navigation, route }) {
                 }}
               >
                 <TouchableOpacity
-                  onPress={() => {}}
+                  onPress={() => handleAddtoCart(productId, quantity)}
                   style={{
                     justifyContent: "center",
                     alignItems: "center",

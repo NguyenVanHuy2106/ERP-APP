@@ -14,6 +14,13 @@ import profileEdit from "../../view/profileEdit";
 import cartScreen from "../../view/cart";
 import addressScreen from "../../view/address";
 import addNewAddress from "../../view/address/addNewAddress";
+import UpdateAddress from "../../view/address/updateAddress";
+import Order from "../../view/order";
+import OrderedList from "../../view/orderedList";
+import OrderDetail from "../../view/orderDetail";
+import DeliveryOrders from "../../view/orderedList/deliveryOrders";
+import PromotionDetail from "../../view/promotionDetail";
+import CompletedOrder from "../../view/completedOrder";
 const RootStack = createStackNavigator();
 
 const rootStackScreen = () => (
@@ -76,6 +83,41 @@ const rootStackScreen = () => (
     <RootStack.Screen
       name="addNewAddress"
       component={addNewAddress}
+      options={{ headerShown: false }}
+    />
+    <RootStack.Screen
+      name="updateAddress"
+      component={UpdateAddress}
+      options={{ headerShown: false }}
+    />
+    <RootStack.Screen
+      name="orderScreen"
+      component={Order}
+      options={{ headerShown: false }}
+    />
+    <RootStack.Screen
+      name="orderList"
+      component={OrderedList}
+      options={{ headerShown: false }}
+    />
+    <RootStack.Screen
+      name="deliveryOrders"
+      component={DeliveryOrders}
+      options={{ headerShown: false }}
+    />
+    <RootStack.Screen
+      name="orderDetail"
+      component={OrderDetail}
+      options={{ headerShown: false }}
+    />
+    <RootStack.Screen
+      name="promotionDetail"
+      component={PromotionDetail}
+      options={{ headerShown: false }}
+    />
+    <RootStack.Screen
+      name="completedOrder"
+      component={CompletedOrder}
       options={{ headerShown: false }}
     />
     {/*         

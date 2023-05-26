@@ -146,8 +146,9 @@ export default function Category({ navigation }) {
                     }}
                     key={index}
                     style={{
-                      paddingHorizontal: 20,
+                      paddingHorizontal: 5,
                       marginBottom: 20,
+                      alignItems: "center",
                     }}
                   >
                     <Image
@@ -163,12 +164,18 @@ export default function Category({ navigation }) {
                     <Text
                       style={{
                         marginTop: 5,
-                        width: 60,
+                        //width: 70,
                         flexWrap: "wrap",
                         textAlign: "center",
+                        maxWidth: 80,
+                        whiteSpace: "nowrap",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
                       }}
                     >
-                      {item.subgroupName}
+                      {item.subgroupName.length > 10
+                        ? `${item.subgroupName.slice(0, 10)}...`
+                        : item.subgroupName}
                     </Text>
                   </TouchableOpacity>
                 ))}
