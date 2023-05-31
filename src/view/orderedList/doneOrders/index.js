@@ -36,7 +36,7 @@ export default function DoneOrders({ navigation, route }) {
     condition.isReviewed = 1;
     condition.isOutput = 1;
     condition.isDelivery = 1;
-    condition.isIncome = 0;
+    condition.isIncome = null;
     condition.isDeleted = 0;
     condition.saleOrderTypeId = 1;
     condition.customerId = JSON.parse(accountFromStorage);

@@ -69,12 +69,12 @@ const DashBoard = ({ route, navigation }) => {
         //initialParams={{ userData }}
         options={{ headerShown: false }}
       />
-      <Tab.Screen
+      {/* <Tab.Screen
         name="Thông báo"
         component={Notify}
         //initialParams={{ userData }}
         options={{ headerShown: false }}
-      />
+      /> */}
       <Tab.Screen
         name="Cá nhân"
         component={Profile}

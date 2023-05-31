@@ -212,7 +212,7 @@ export default function ShopDetail({ navigation, route }) {
     const result = await addToCart(
       account,
       modelId,
-      productId.length === 0 ? null : productId,
+      productId === -1 ? null : productId,
       modelInfo.subgroupId,
       modelInfo.brandId,
       quantity,
@@ -722,26 +722,6 @@ export default function ShopDetail({ navigation, route }) {
           }}
         >
           <TouchableOpacity
-            onPress={() => {
-              setIsVisible(true);
-            }}
-            activeOpacity={0.8}
-            style={{
-              paddingHorizontal: 30,
-              paddingVertical: 10,
-              borderWidth: 1,
-              borderColor: "#CC0000",
-              backgroundColor: "#ffffff",
-              height: "100%",
-              width: "55%",
-              justifyContent: "center",
-              alignItems: "center",
-            }}
-          >
-            <Feather name="shopping-cart" color="#CC0000" size={20} />
-            <Text style={{ color: "#CC0000" }}>Thêm vào giỏ hàng</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
             activeOpacity={0.7}
             onPress={() => {}}
             style={{
@@ -750,11 +730,33 @@ export default function ShopDetail({ navigation, route }) {
               height: "100%",
               alignItems: "center",
               justifyContent: "center",
-              backgroundColor: "#CC0000",
+              backgroundColor: "#ffffff",
               width: "45%",
+              borderWidth: 1,
+              borderColor: "#ff0000",
             }}
           >
-            <Text style={{ fontSize: 16, color: "#ffffff" }}>Mua ngay</Text>
+            {/* <Text style={{ fontSize: 16, color: "#ffffff" }}>Mua ngay</Text> */}
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => {
+              setIsVisible(true);
+            }}
+            activeOpacity={0.8}
+            style={{
+              paddingHorizontal: 30,
+              paddingVertical: 10,
+              borderWidth: 1,
+              borderColor: "#ff0000",
+              backgroundColor: "#ff0000",
+              height: "100%",
+              width: "55%",
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
+            <Feather name="shopping-cart" color="#ffffff" size={20} />
+            <Text style={{ color: "#ffffff" }}>Thêm vào giỏ hàng</Text>
           </TouchableOpacity>
         </View>
       </View>

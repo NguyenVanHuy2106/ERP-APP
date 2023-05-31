@@ -69,8 +69,11 @@ export default function WaitGetProductOrder({ navigation, route }) {
     condition.customerId = account;
     condition.customerPhone = null;
     //console.log(condition);
+    //updateCancelOrderAPI(account, saleOrderId);
+    setVisible(true);
     const result = await updateCancelOrderAPI(account, saleOrderId);
     if (result.status === 200) {
+      setVisible(false);
       Alert.alert("Thông báo", "Huỷ đơn thành công");
       getOrderConfirmingList(account, condition);
     }

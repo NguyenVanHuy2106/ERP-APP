@@ -26,16 +26,24 @@ export const authSignupApi = async (
   gender
 ) => {
   try {
+    console.log(
+      username,
+      password,
+      firstname,
+      lastname,
+      phoneNumber,
+      email,
+      gender
+    );
     const response = await API.post(
-      "auth/sign-up",
+      "authCustomer/sign-up",
       {
         data: {
           username: username,
           password: password,
-          sysUserDescription: null,
+          description: "",
           isActived: 1,
-          roleId: 1,
-          userInformation: {
+          customerInformation: {
             firstname: firstname,
             lastname: lastname,
             phoneNumber: phoneNumber,
@@ -45,8 +53,8 @@ export const authSignupApi = async (
             provinceId: null,
             districtId: null,
             wardId: null,
-            address: null,
-            description: null,
+            address: "",
+            description: "",
           },
         },
       },

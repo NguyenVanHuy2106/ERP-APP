@@ -20,13 +20,13 @@ export default function FlashScreen({ navigation }) {
     <View style={styles.container}>
       <View style={styles.header}>
         <Image
-          source={require("../../assets/logo/logo1.png")}
+          source={require("../../assets/logo/logo.png")}
           style={{ width: 250, height: 250 }}
         ></Image>
       </View>
       <View style={styles.footer}>
-        <Text style={styles.title}>Welcome to ERP App</Text>
-        <Text style={styles.text}>Sign in with account</Text>
+        <Text style={styles.title}>Chào mừng bạn đến với P&H</Text>
+        <Text style={styles.text}>Nơi mua sắm tiện lợi</Text>
 
         <View style={styles.button}>
           <TouchableOpacity
@@ -82,7 +82,7 @@ const styles = StyleSheet.create({
   },
   title: {
     color: "#05375a",
-    fontSize: 35,
+    fontSize: 40,
     fontWeight: "bold",
   },
   text: {

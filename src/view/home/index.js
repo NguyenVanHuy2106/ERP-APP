@@ -39,6 +39,7 @@ import {
   getAllModelFavForCustomer,
   updateModelFav,
 } from "../../helper/controller/customerFav";
+import { getAccountInfoAPI } from "../../helper/controller/profile";
 const CardA = ({ imageUri }) => {
   return (
     <View style={styles.card}>
@@ -56,6 +57,8 @@ export default function Home({ navigation, route }) {
   const [dataSearch, setDataSearch] = React.useState({
     textSearch: "",
   });
+  const [userInfo, setUserInfo] = useState({});
+  const [accountInfo, setAccountInfo] = useState({});
   const [isShowLoadingModel, setIsShowLoadingModel] = useState(false);
   const [isFav, setIsFav] = useState(0);
   const [isVisible, setIsVisible] = useState(false);
@@ -66,26 +69,44 @@ export default function Home({ navigation, route }) {
   const [modelList, setModelList] = useState([]);
   //console.log(modelList);
   modelList.sort((a, b) => a.brandId - b.brandId);
+  // const brandMap = brandList.reduce((result, brand) => {
+  //   result[brand.brandId] = brand.brandName;
+  //   return result;
+  //   }, {});
   const groupedModels = modelList.reduce((result, model) => {
+    //console.log(model);
     const brandId = model.brandId;
+    const brandName = model.brandName;
+    //console.log(brandName);
     if (!result[brandId]) {
-      result[brandId] = [];
+      result[brandId] = { brandName, models: [] };
     }
-    result[brandId].push(model);
+    result[brandId].models.push(model);
+    //console.log(result);
     return result;
   }, {});
-
+  const getAccount = async () => {
+    const accountFromStorage = await AsyncStorage.getItem("account");
+    setAccount(JSON.parse(accountFromStorage));
+    getAccountInfo(accountFromStorage);
+  };
+  const getAccountInfo = async (accountId) => {
+    const result = await getAccountInfoAPI(accountId);
+    //console.log(result);
+    if (result.status == 200) {
+      setAccountInfo(result.data.data.customers.md_customer_info);
+      //console.log(result.data.data.customers.md_customer_info);
+    } else {
+      setVisible(false);
+      // Alert.alert("Thông báo", "Sự cố lấy thông tin");
+    }
+  };
   const handleSelect = (group, valueId) => {
     setSelected((prevSelected) => ({ ...prevSelected, [group]: valueId }));
   };
 
   const handleQuantityChange = (value) => {
     setQuantity(value);
-  };
-  const getAccount = async () => {
-    const accountFromStorage = await AsyncStorage.getItem("account");
-    setAccount(JSON.parse(accountFromStorage));
-    //getAccountInfo(accountFromStorage);
   };
 
   const renderCard = (cards, index) => {
@@ -181,19 +202,62 @@ export default function Home({ navigation, route }) {
     <ScrollView showsVerticalScrollIndicator={false}>
       <View style={styles.containerTitle}>
         <View
-          style={{ justifyContent: "center", marginLeft: 20, marginBottom: 5 }}
+          style={{
+            width: 70,
+            height: 70,
+            borderRadius: 100,
+            borderWidth: 3,
+            borderColor: "#ffffff",
+            justifyContent: "center",
+            alignItems: "center",
+            backgroundColor: "#cccccc",
+            flexDirection: "row",
+          }}
         >
-          <Avatar.Image source={{ uri: data.userAvatar }} />
+          {accountInfo.firstname && (
+            <Text style={{ fontSize: 22, fontWeight: "bold" }}>
+              {accountInfo.firstname.charAt(0)}
+            </Text>
+          )}
+          {accountInfo.lastname && (
+            <Text style={{ fontSize: 22, fontWeight: "bold" }}>
+              {accountInfo.lastname.charAt(0)}
+            </Text>
+          )}
         </View>
-        <View style={styles.title}>
-          <Text style={styles.textTitle}>{"Xin chào, Nguyen Huy!"}</Text>
-        </View>
+        {account === null ? (
+          <TouchableOpacity
+            onPress={() => {
+              navigation.navigate("signInScreen");
+            }}
+          >
+            <Text
+              style={{
+                fontSize: 20,
+                marginBottom: 8,
+                paddingLeft: 4,
+              }}
+            >
+              Mời bạn đăng nhập!
+            </Text>
+          </TouchableOpacity>
+        ) : (
+          <View style={styles.title}>
+            <Text style={styles.textTitle}>
+              {"Xin chào, " +
+                accountInfo.firstname +
+                " " +
+                accountInfo.lastname +
+                "!"}
+            </Text>
+          </View>
+        )}
       </View>
       <View>
         <View style={styles.searchMargin}>
           <View style={styles.search}>
             <TextInput
-              placeholder="Nhập từ khóa để tìm kiếm"
+              placeholder="Bạn muốn tìm gì?"
               placeholderTextColor="#C0C0C0"
               autoCapitalize="none"
               style={styles.textInput}
@@ -291,379 +355,185 @@ export default function Home({ navigation, route }) {
             )}
           </View>
 
-          {/* <View
-            style={{
-              flexDirection: "row",
-              paddingHorizontal: 25,
-              marginTop: 250,
-              zIndex: 2,
-            }}
-          >
-            <View style={{ flex: 3, alignItems: "flex-start" }}>
-              <Text style={{ fontSize: 20, fontWeight: "bold" }}>
-                Danh mục nổi bật
-              </Text>
-            </View>
-            <TouchableOpacity
-              onPress={() => {
-                navigation.navigate("categoryScreen");
-              }}
-              style={{
-                flex: 1,
-                alignItems: "flex-end",
-                justifyContent: "flex-end",
-              }}
-            >
-              <Text style={{ fontSize: 15 }}>Tất cả</Text>
-            </TouchableOpacity>
-          </View> */}
-
-          <View
-            style={{
-              flexDirection: "row",
-              paddingHorizontal: 25,
-              marginTop: 250,
-              zIndex: 2,
-            }}
-          >
-            <View style={{ flex: 3, alignItems: "flex-start" }}>
-              <Text style={{ fontSize: 20, fontWeight: "bold" }}>
-                Khuyến mãi
-              </Text>
-            </View>
-            <View
-              style={{
-                flex: 1,
-                alignItems: "flex-end",
-                justifyContent: "flex-end",
-              }}
-            >
-              <Text style={{ fontSize: 15 }}>Tất cả</Text>
-            </View>
-          </View>
           <View
             style={{
               marginLeft: 20,
               marginRight: 20,
-              zIndex: 2,
+
+              marginTop: 230,
             }}
-          >
-            <FlatList
-              data={favItems}
-              horizontal={true}
-              showsHorizontalScrollIndicator={false}
-              renderItem={({ item, index }) => {
-                return (
-                  <TouchableOpacity
-                    onPress={() => {
-                      navigation.navigate("shopDetailScreen", {
-                        modelId: item.modelId,
-                        modelPrice: item.modelPrice,
-                        maingroupId: item.maingroupId,
-                        subgroupId: item.subgroupId,
-                        modelStockAmount: item.amount,
-                      });
-                    }}
-                  >
-                    <View
-                      style={{
-                        zIndex: 1,
-                        alignItems: "flex-end",
-                        marginRight: 10,
-                      }}
-                    >
-                      <FontAwesome
-                        style={{
-                          zIndex: 2,
-                          position: "absolute",
-                        }}
-                        name="star"
-                        size={72}
-                        color="#FF0"
-                      />
-                      <FontAwesome
-                        style={{
-                          zIndex: 3,
-                          position: "absolute",
-                        }}
-                        name="star"
-                        size={70}
-                        color="#FF0000"
-                      />
-                      <Text
-                        style={{
-                          zIndex: 4,
-                          position: "absolute",
-                          marginTop: 25,
-                          paddingRight: 15,
-                          color: "#FF0",
-                        }}
-                      >
-                        -50%
-                      </Text>
-                    </View>
-                    <Card
-                      key={index}
-                      containerStyle={{ borderRadius: 10, marginLeft: 1 }}
-                    >
-                      <View
-                        style={{
-                          justifyContent: "center",
-                          alignItems: "center",
-                        }}
-                      >
-                        <Image
-                          source={{
-                            uri: item.modelImagePath
-                              ? item.modelImagePath
-                              : "https://icon-library.com/images/image-icon-png/image-icon-png-6.jpg",
-                          }}
-                          style={{
-                            width: 150,
-                            height: 150,
-                            marginLeft: 0,
-                            marginRight: 0,
-                            borderRadius: 10,
-                          }}
-                        />
-                      </View>
-                      <Card.Title
-                        style={{
-                          fontSize: 16,
-                          marginTop: 10,
-                          maxWidth: 150,
-                          whiteSpace: "nowrap",
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                        }}
-                      >
-                        {item.modelName.length > 15
-                          ? `${item.modelName.slice(0, 15)}...`
-                          : item.modelName}
-                      </Card.Title>
-
-                      <View
-                        style={{
-                          flexDirection: "row",
-                          alignItems: "center",
-                        }}
-                      >
-                        <Entypo name="price-ribbon" color="#000000" size={20} />
-                        <Text
-                          style={{
-                            fontSize: 15,
-                            marginRight: 2,
-                            textDecorationLine: "line-through",
-                          }}
-                        >
-                          {item.modelPrice + "đ"}
-                        </Text>
-                      </View>
-
-                      <View>
-                        <View
-                          style={{
-                            flexDirection: "row",
-                            alignItems: "center",
-                          }}
-                        >
-                          <Entypo
-                            name="price-ribbon"
-                            color="#FF0000"
-                            size={20}
-                          />
-                          <Text
-                            style={{
-                              fontSize: 22,
-                              color: "#FF0000",
-                            }}
-                          >
-                            {item.modelPrice + "đ"}
-                          </Text>
-                        </View>
-                        <Text style={{ fontStyle: "italic" }}>
-                          Còn lại: 121
-                        </Text>
-                      </View>
-                    </Card>
-                  </TouchableOpacity>
-                );
-              }}
-            />
-          </View>
-
-          <View
-            style={{
-              flexDirection: "row",
-              paddingHorizontal: 25,
-              marginTop: 10,
-              zIndex: 2,
-            }}
-          >
-            <View style={{ flex: 3, alignItems: "flex-start" }}>
-              <Text style={{ fontSize: 20, fontWeight: "bold" }}>
-                Yêu thích
-              </Text>
-            </View>
+          ></View>
+          {account && (
             <View
               style={{
-                flex: 1,
-                alignItems: "flex-end",
-                justifyContent: "flex-end",
+                zIndex: 2,
               }}
             >
-              <Text style={{ fontSize: 15 }}>Tất cả</Text>
+              <View
+                style={{
+                  flexDirection: "row",
+                  paddingHorizontal: 25,
+                  marginTop: 10,
+                  zIndex: 2,
+                }}
+              >
+                <View style={{ flex: 3, alignItems: "flex-start" }}>
+                  <Text style={{ fontSize: 20, fontWeight: "bold" }}>
+                    Yêu thích
+                  </Text>
+                </View>
+              </View>
+              <View
+                style={{
+                  marginLeft: 5,
+                  marginRight: 5,
+                  zIndex: 2,
+                }}
+              >
+                {favItems &&
+                  favItems.map((item, index) => {
+                    return (
+                      <TouchableOpacity
+                        onPress={() => {
+                          navigation.navigate("shopDetailScreen", {
+                            modelId: item.modelId,
+                            modelPrice: item.modelPrice,
+                            maingroupId: item.maingroupId,
+                            subgroupId: item.subgroupId,
+                            modelStockAmount: item.amount,
+                          });
+                        }}
+                        key={index}
+                      >
+                        <Card
+                          containerStyle={{
+                            borderRadius: 10,
+                            marginTop: 8,
+                            borderWidth: 0,
+                            shadowColor: "#dddddd",
+                            shadowOffset: { width: 0, height: 0 },
+                            shadowOpacity: 0.8,
+                            shadowRadius: 2,
+                          }}
+                        >
+                          <View style={{ flexDirection: "row" }}>
+                            <View style={{ flex: 2 }}>
+                              <Image
+                                source={{
+                                  uri: item.modelImagePath,
+                                }}
+                                style={{
+                                  width: 100,
+                                  height: 100,
+                                  borderRadius: 10,
+                                }}
+                              />
+                            </View>
+                            <View
+                              style={{
+                                flex: 3,
+                                justifyContent: "center",
+                              }}
+                            >
+                              <View style={{ padding: 4 }}>
+                                <Text
+                                  style={{ fontSize: 16, fontWeight: "bold" }}
+                                >
+                                  {item.modelName}
+                                </Text>
+                              </View>
+                              <View
+                                style={{
+                                  flexDirection: "row",
+                                  alignItems: "flex-end",
+                                  padding: 4,
+                                }}
+                              >
+                                <Text>Giá:</Text>
+                                <Text
+                                  style={{ fontSize: 18, color: "#FF0000" }}
+                                >
+                                  {"đ" + item.modelPrice.toLocaleString()}
+                                </Text>
+                              </View>
+                            </View>
+                            <View
+                              style={{
+                                flex: 1,
+                                alignItems: "flex-end",
+                                justifyContent: "center",
+                              }}
+                            >
+                              <TouchableOpacity
+                                onPress={() => handleFav(item)}
+                                style={{
+                                  marginRight: 0,
+                                  width: 45,
+                                  height: 45,
+                                  justifyContent: "center",
+                                  alignItems: "center",
+                                  borderRadius: 5,
+                                }}
+                              >
+                                <FontAwesome
+                                  name="heart"
+                                  color="#ff0000"
+                                  size={30}
+                                />
+                              </TouchableOpacity>
+                            </View>
+                          </View>
+                        </Card>
+                      </TouchableOpacity>
+                    );
+                  })}
+              </View>
             </View>
-          </View>
+          )}
           <View
             style={{
-              marginLeft: 5,
-              marginRight: 5,
               zIndex: 2,
             }}
           >
-            {favItems &&
-              favItems.map((item, index) => {
-                return (
-                  <TouchableOpacity
-                    onPress={() => {
-                      navigation.navigate("shopDetailScreen", {
-                        modelId: item.modelId,
-                        modelPrice: item.modelPrice,
-                        maingroupId: item.maingroupId,
-                        subgroupId: item.subgroupId,
-                        modelStockAmount: item.amount,
-                      });
-                    }}
-                    key={index}
-                  >
-                    <Card
-                      containerStyle={{
-                        borderRadius: 10,
-                        marginTop: 8,
-                        borderWidth: 0,
-                        shadowColor: "#dddddd",
-                        shadowOffset: { width: 0, height: 0 },
-                        shadowOpacity: 0.8,
-                        shadowRadius: 2,
-                      }}
-                    >
-                      <View style={{ flexDirection: "row" }}>
-                        <View style={{ flex: 2 }}>
-                          <Image
-                            source={{
-                              uri: item.modelImagePath,
-                            }}
-                            style={{
-                              width: 100,
-                              height: 100,
-                              borderRadius: 10,
-                            }}
-                          />
-                        </View>
-                        <View
-                          style={{
-                            flex: 3,
-                            justifyContent: "center",
-                          }}
-                        >
-                          <View style={{ padding: 4 }}>
-                            <Text style={{ fontSize: 16, fontWeight: "bold" }}>
-                              {item.modelName}
-                            </Text>
-                          </View>
-                          <View
-                            style={{
-                              flexDirection: "row",
-                              alignItems: "flex-end",
-                              padding: 4,
-                            }}
-                          >
-                            <Text>Giá:</Text>
-                            <Text style={{ fontSize: 18, color: "#FF0000" }}>
-                              {"đ" + item.modelPrice.toLocaleString()}
-                            </Text>
-                          </View>
-                        </View>
-                        <View
-                          style={{
-                            flex: 1,
-                            alignItems: "flex-end",
-                            justifyContent: "center",
-                          }}
-                        >
-                          <TouchableOpacity
-                            onPress={() => handleFav(item)}
-                            style={{
-                              marginRight: 0,
-                              width: 45,
-                              height: 45,
-                              justifyContent: "center",
-                              alignItems: "center",
-                              borderRadius: 5,
-                            }}
-                          >
-                            <FontAwesome
-                              name="heart"
-                              color="#ff0000"
-                              size={30}
-                            />
-                          </TouchableOpacity>
-                        </View>
-                      </View>
-                    </Card>
-                  </TouchableOpacity>
-                );
-              })}
-          </View>
-          <View>
-            {Object.keys(groupedModels).map((brandId) => (
-              <View
-                key={brandId}
-                style={{
-                  justifyContent: "center",
-                }}
-              >
+            {Object.keys(groupedModels).map((brandId) => {
+              const brand = groupedModels[brandId];
+              return (
                 <View
+                  key={brandId}
                   style={{
-                    justifyContent: "center",
-                    alignItems: "center",
-                    marginTop: 20,
-                    backgroundColor: "#FF6347",
-                    paddingVertical: 8,
-                    marginHorizontal: 18,
-                  }}
-                >
-                  <Text
-                    style={{
-                      fontSize: 16,
-                      fontWeight: "bold",
-                      color: "#ffffff",
-                    }}
-                  >
-                    Thương hiệu
-                  </Text>
-                </View>
-                <View
-                  style={{
-                    marginHorizontal: 18,
-                    backgroundColor: "#FFE4E1",
-                    paddingTop: 4,
-                    paddingHorizontal: 3,
-                    alignItems: "center",
                     justifyContent: "center",
                   }}
                 >
                   <View
                     style={{
-                      zIndex: 2,
+                      justifyContent: "center",
+                      alignItems: "center",
+                      marginTop: 20,
+                      backgroundColor: "#FF6347",
+                      paddingVertical: 8,
+                      marginHorizontal: 18,
+                    }}
+                  >
+                    <Text
+                      style={{
+                        fontSize: 16,
+                        fontWeight: "bold",
+                        color: "#ffffff",
+                      }}
+                    >
+                      {brand.brandName}
+                    </Text>
+                  </View>
+                  <View
+                    style={{
                       flexDirection: "row",
                       flexWrap: "wrap",
                       justifyContent: "space-between",
-                      paddingBottom: 5,
+                      paddingHorizontal: 22,
+                      paddingTop: 4,
                     }}
                   >
-                    {groupedModels[brandId].map((item, index) => (
+                    {brand.models.map((item, index) => (
                       <TouchableOpacity
                         key={index}
                         onPress={() => {
@@ -719,9 +589,171 @@ export default function Home({ navigation, route }) {
                                     fontSize: 15,
                                     textAlign: "center",
                                     maxWidth: 160,
-                                    whiteSpace: "nowrap",
+                                    // whiteSpace: "nowrap",
                                     overflow: "hidden",
-                                    textOverflow: "ellipsis",
+                                    // textOverflow: "ellipsis",
+                                  }}
+                                >
+                                  {item.modelName.length > 20
+                                    ? `${item.modelName.slice(0, 20)}...`
+                                    : item.modelName}
+                                </Text>
+                              </View>
+                              {item.promotionProgramId !== null && (
+                                <View
+                                  style={{
+                                    flexDirection: "row",
+                                    justifyContent: "center",
+                                    alignItems: "center",
+                                  }}
+                                >
+                                  <Text
+                                    style={{
+                                      fontSize: 15,
+                                      textDecorationLine: "line-through",
+                                    }}
+                                  >
+                                    {"đ" + item.modelPrice.toLocaleString()}
+                                  </Text>
+                                  <Text
+                                    style={{
+                                      fontSize: 16,
+                                      color: "#ff0000",
+                                      paddingLeft: 4,
+                                    }}
+                                  >
+                                    {item.isPercentValue === 1
+                                      ? "-" + item.value + "%"
+                                      : "-" + item.value}
+                                  </Text>
+                                </View>
+                              )}
+                              <View>
+                                <Text
+                                  style={{
+                                    fontSize: 17,
+                                    fontWeight: "bold",
+                                    color: "#ff0000",
+                                    paddingTop: 4,
+                                  }}
+                                >
+                                  {"đ" + item.discountValue.toLocaleString()}
+                                </Text>
+                              </View>
+                            </View>
+                          </View>
+                        </Card>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </View>
+              );
+            })}
+            {/* {Object.keys(groupedModels).map((models, index) => (
+              <View
+                key={index}
+                style={{
+                  justifyContent: "center",
+                }}
+              >
+                <View
+                  style={{
+                    justifyContent: "center",
+                    alignItems: "center",
+                    marginTop: 20,
+                    backgroundColor: "#FF6347",
+                    paddingVertical: 8,
+                    marginHorizontal: 18,
+                  }}
+                >
+                  <Text
+                    style={{
+                      fontSize: 16,
+                      fontWeight: "bold",
+                      color: "#ffffff",
+                    }}
+                  >
+                    {models.brandName}
+                  </Text>
+                </View>
+                <View
+                  style={{
+                    marginHorizontal: 18,
+                    backgroundColor: "#FFE4E1",
+                    paddingTop: 4,
+                    paddingHorizontal: 3,
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <View
+                    style={{
+                      zIndex: 2,
+                      flexDirection: "row",
+                      flexWrap: "wrap",
+                      justifyContent: "space-between",
+                      paddingBottom: 5,
+                    }}
+                  >
+                    {groupedModels.models.map((item, index) => (
+                      <TouchableOpacity
+                        key={index}
+                        onPress={() => {
+                          navigation.navigate("shopDetailScreen", {
+                            modelId: item.modelId,
+                            modelPrice: item.modelPrice,
+                            maingroupId: item.maingroupId,
+                            subgroupId: item.subgroupId,
+                            modelStockAmount: item.amount,
+                          });
+                        }}
+                      >
+                        <Card
+                          containerStyle={{
+                            marginLeft: 5,
+                            marginRight: 5,
+                            marginTop: 5,
+                            marginBottom: 5,
+                            width: 175,
+                            height: 260,
+                            borderWidth: 0,
+                            shadowColor: "#EEEEEE",
+                            shadowOffset: { width: 0, height: 0 },
+                            shadowOpacity: 0.8,
+                            shadowRadius: 2,
+                            alignItems: "center",
+                          }}
+                        >
+                          <View>
+                            <View
+                              style={{
+                                justifyContent: "center",
+                                alignItems: "center",
+                              }}
+                            >
+                              <Image
+                                source={{
+                                  uri: item.modelImagePath
+                                    ? item.modelImagePath
+                                    : "https://icon-library.com/images/image-icon-png/image-icon-png-6.jpg",
+                                }}
+                                style={{
+                                  width: 150,
+                                  height: 150,
+                                  marginLeft: 0,
+                                  marginRight: 0,
+                                  borderRadius: 10,
+                                }}
+                              />
+                              <View style={{ marginTop: 20 }}>
+                                <Text
+                                  style={{
+                                    fontSize: 15,
+                                    textAlign: "center",
+                                    maxWidth: 160,
+                                    // whiteSpace: "nowrap",
+                                    overflow: "hidden",
+                                    // textOverflow: "ellipsis",
                                   }}
                                 >
                                   {item.modelName.length > 20
@@ -778,7 +810,7 @@ export default function Home({ navigation, route }) {
                   </View>
                 </View>
               </View>
-            ))}
+            ))} */}
             {isShowLoadingModel && (
               <View>
                 <ActivityIndicator size="large" />
@@ -811,6 +843,7 @@ const styles = StyleSheet.create({
     height: 110,
     flexDirection: "row",
     borderRadius: 40,
+    marginLeft: 16,
     // backgroundColor: "#ffffff",
     // shadowColor: "#000000",
     // shadowOffset: { width: 5, height: 10 },

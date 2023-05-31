@@ -43,14 +43,7 @@ export default function Cart({ navigation }) {
     //console.log(item);
     total += item.quantity * item.discountValue;
   });
-  //console.log(total);
-  //console.log(checkedItems);
-  //console.log(quantityValue);
 
-  //console.log(total);
-
-  //console.log(totalAmount);
-  //console.log(totalAmount);
   var subGroupIdList = [];
 
   const handleCheck = (modelId, productId) => {
@@ -67,7 +60,7 @@ export default function Cart({ navigation }) {
           (item) => item.modelId === modelId && item.productId === productId
         );
         if (cartItem) {
-          console.log(cartItem);
+          //console.log(cartItem);
           const newCheckedItem = {
             cartcustomerId: cartItem.cartcustomerId,
             subgroupId: cartItem.subgroupId,
@@ -136,31 +129,6 @@ export default function Cart({ navigation }) {
       setCheckedItems(updatedItems);
     }
   };
-
-  // const getModelByMainGroupId = async (mainGroupId, subGroup, brand, limit) => {
-  //   setVisible(true);
-  //   const result = await getModelByMainGroup(
-  //     mainGroupId,
-  //     subGroup,
-  //     brand,
-  //     limit
-  //   );
-  //   if (result.status == 200) {
-  //     setCartItemList(result.data.data.modelList);
-  //     setVisible(false);
-  //     var subGroup = result.data.data.modelList;
-  //     //console.log(subGroup);
-  //     subGroup.forEach((item) => {
-  //       if (!subGroupIdList.includes(item.subgroupId)) {
-  //         subGroupIdList.push(item.subgroupId);
-  //       }
-  //     });
-  //     getModelSuggest(subGroupIdList);
-  //     //console.log(subGroupIdList);
-  //   } else {
-  //     Alert.alert("Thông báo", "Lỗi lấy dữ liệu");
-  //   }
-  // };
 
   const getAccount = async () => {
     const accountFromStorage = await AsyncStorage.getItem("account");

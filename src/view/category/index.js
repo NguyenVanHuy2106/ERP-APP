@@ -168,9 +168,9 @@ export default function Category({ navigation }) {
                         flexWrap: "wrap",
                         textAlign: "center",
                         maxWidth: 80,
-                        whiteSpace: "nowrap",
+                        // whiteSpace: "nowrap",
                         overflow: "hidden",
-                        textOverflow: "ellipsis",
+                        // textOverflow: "ellipsis",
                       }}
                     >
                       {item.subgroupName.length > 10

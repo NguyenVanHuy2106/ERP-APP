@@ -105,7 +105,7 @@ export default function Shop({ navigation }) {
         <View style={styles.searchMargin}>
           <View style={styles.search}>
             <TextInput
-              placeholder="Nhập từ khóa để tìm kiếm"
+              placeholder="Bạn muốn tìm gì?"
               placeholderTextColor="#C0C0C0"
               autoCapitalize="none"
               style={styles.textInput}

@@ -124,13 +124,13 @@ export default function SignUp({ navigation }) {
         data.lastname,
         data.phone,
         data.email,
-        data.gender
+        selectedValueGender
       );
       // if (result.status == 200) {
       //   toggleModal();
       // }
-      //console.log(result.data.isError);
-      if (result.data.isError === true) {
+      // console.log(result);
+      if (result.status === 200) {
         setVisible(false);
         Alert.alert("Thông báo", result.data.message);
       } else {
@@ -187,7 +187,7 @@ export default function SignUp({ navigation }) {
           <Picker
             style={styles.picker}
             selectedValue={selectedValueGender}
-            itemStyle={{ height: 80, fontSize: 18 }}
+            itemStyle={{ height: 80 }}
             onValueChange={(itemValue) => setPickerGender(itemValue)}
           >
             <Picker.Item label={"Nam"} value={1} />

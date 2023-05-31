@@ -44,14 +44,17 @@ export const getOrderDetailAPI = async (items) => {
 };
 
 export const updateCancelOrderAPI = async (account, saleOrderId) => {
+  var saleOrderList = [];
+  saleOrderList = [saleOrderId];
+  //console.log(saleOrderList);
   try {
     const response = await API.post(
       "saleorder/update-saleorder",
       {
         userLogIn: account,
         data: {
-          saleOrder: {
-            saleOrderId: saleOrderId,
+          updateStatus: {
+            saleOrderList: saleOrderList,
             isReviewed: null,
             isDelivery: null,
             isOutput: null,

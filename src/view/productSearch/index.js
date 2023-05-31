@@ -153,9 +153,9 @@ export default function ProductSearch({ navigation, route }) {
                               fontSize: 15,
                               textAlign: "center",
                               maxWidth: 160,
-                              whiteSpace: "nowrap",
+                              // whiteSpace: "nowrap",
                               overflow: "hidden",
-                              textOverflow: "ellipsis",
+                              // textOverflow: "ellipsis",
                             }}
                           >
                             {item.modelName.length > 20
