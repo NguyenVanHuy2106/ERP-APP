@@ -529,7 +529,7 @@ export default function Home({ navigation, route }) {
                       flexDirection: "row",
                       flexWrap: "wrap",
                       justifyContent: "space-between",
-                      paddingHorizontal: 22,
+                      paddingHorizontal: 20,
                       paddingTop: 4,
                     }}
                   >
@@ -553,7 +553,7 @@ export default function Home({ navigation, route }) {
                             marginTop: 5,
                             marginBottom: 5,
                             width: 175,
-                            height: 260,
+                            height: 270,
                             borderWidth: 0,
                             shadowColor: "#EEEEEE",
                             shadowOffset: { width: 0, height: 0 },
@@ -594,8 +594,8 @@ export default function Home({ navigation, route }) {
                                     // textOverflow: "ellipsis",
                                   }}
                                 >
-                                  {item.modelName.length > 20
-                                    ? `${item.modelName.slice(0, 20)}...`
+                                  {item.modelName.length > 30
+                                    ? `${item.modelName.slice(0, 30)}...`
                                     : item.modelName}
                                 </Text>
                               </View>

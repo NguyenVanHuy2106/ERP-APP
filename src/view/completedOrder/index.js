@@ -160,7 +160,8 @@ export default function CompletedOrder({ navigation, route }) {
             justifyContent: "space-evenly",
           }}
         >
-          <View
+          <TouchableOpacity
+            onPress={() => navigation.navigate("dashboardScreen")}
             style={{
               borderWidth: 1,
               paddingHorizontal: 30,
@@ -176,7 +177,7 @@ export default function CompletedOrder({ navigation, route }) {
             >
               Tiếp tục mua sắm
             </Text>
-          </View>
+          </TouchableOpacity>
           <TouchableOpacity
             onPress={() => {
               navigation.navigate("orderDetail", {

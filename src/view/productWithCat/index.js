@@ -168,8 +168,8 @@ export default function ProductWithCat({ navigation, route }) {
                               // textOverflow: "ellipsis",
                             }}
                           >
-                            {item.modelName.length > 20
-                              ? `${item.modelName.slice(0, 20)}...`
+                            {item.modelName.length > 30
+                              ? `${item.modelName.slice(0, 30)}...`
                               : item.modelName}
                           </Text>
                         </View>

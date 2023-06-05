@@ -114,7 +114,7 @@ export default function SignIn({ navigation }) {
               size={20}
               color="#FF0000"
             />
-            <Text style={{ marginLeft: 10, fontSize: "17", color: "#FF0000" }}>
+            <Text style={{ marginLeft: 10, fontSize: 17, color: "#FF0000" }}>
               {error}
             </Text>
           </View>

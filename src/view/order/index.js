@@ -33,6 +33,7 @@ import { getAllPaymentOrderType } from "../../helper/controller/paymentOrderType
 import { getDeliveryFeeAPI, getServiceAPI } from "../../helper/controller/GHN";
 import { getAccountInfoAPI } from "../../helper/controller/profile";
 import { createOrderAPI } from "../../helper/controller/order";
+// import { createPayPalPayment } from "../../helper/paypal";
 import ModalSelector from "react-native-modal-selector";
 export default function Order({ navigation, route }) {
   let listItems = route.params.listItem;
@@ -270,7 +271,7 @@ export default function Order({ navigation, route }) {
 
   const handleBuyer = async () => {
     //navigation.navigate("cartScreen");
-    setVisible(true);
+    //setVisible(true);
     const saleOrder = {};
     saleOrder.saleOrderTypeId = 1;
     saleOrder.deliveryTypeId = 1;
@@ -336,7 +337,8 @@ export default function Order({ navigation, route }) {
         note: "",
       });
     });
-    // console.log(saleOrderDetail);
+    //console.log(saleOrder);
+    //console.log(saleOrderDetail);
 
     const result = await createOrderAPI(account, saleOrder, saleOrderDetail);
     //console.log(saleOrderDetail);
@@ -358,10 +360,34 @@ export default function Order({ navigation, route }) {
     }
   };
 
+  // const handlePayment = async () => {
+  //   const payment = {
+  //     amount: "10.00",
+  //     currency: "USD",
+  //     description: "Test Payment",
+  //   };
+
+  //   try {
+  //     const confirmPayment = await PayPal.pay(payment);
+  //     if (confirmPayment.response.state === "approved") {
+  //       // Thực hiện các xử lý khi thanh toán thành công
+  //       console.log("Payment approved");
+  //     } else {
+  //       // Thực hiện các xử lý khi thanh toán bị hủy bỏ hoặc lỗi
+  //       console.log("Payment cancelled");
+  //     }
+  //   } catch (error) {
+  //     // Xử lý lỗi trong quá trình thanh toán
+  //     console.log("Payment error", error);
+  //   }
+  // };
+
   useEffect(() => {
     getAccount();
     getDelivery();
     getPaymentOrderType();
+    //PayPal.initialize(PayPal.SANDBOX, API_CLIENT_ID);
+    //handlePayment();
     // to_district_id,
     //   to_ward_code,
     //   height,
@@ -822,6 +848,7 @@ export default function Order({ navigation, route }) {
               </Text>
             </View>
           </View>
+          {/* <Button title="Thanh toán" onPress={handlePayment} /> */}
         </View>
       </ScrollView>
       <View

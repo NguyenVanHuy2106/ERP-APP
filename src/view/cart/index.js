@@ -71,15 +71,19 @@ export default function Cart({ navigation }) {
               cartItem.quantity > cartItem.availableInstockAmount
                 ? cartItem.availableInstockAmount
                 : cartItem.quantity,
+            // quantity:
+            //   cartItem.quantity > cartItem.availableInstockAmount
+            //     ? cartItem.availableInstockAmount
+            //     : quantityValue[`${productId}_${modelId}`] || cartItem.quantity,
             modelName: cartItem.modelName,
             productName: cartItem.productName,
             price: cartItem.price,
             modelImagePath: cartItem.modelImagePath,
             isRequestImei: cartItem.isRequestImei,
-            width: cartItem.width,
-            length: cartItem.length,
-            height: cartItem.height,
-            weight: cartItem.weight,
+            width: parseInt(cartItem.width),
+            length: parseInt(cartItem.length),
+            height: parseInt(cartItem.height),
+            weight: parseInt(cartItem.weight),
             discountValue: cartItem.discountValue,
             promotionProgramId: cartItem.promotionProgramId,
             promotionProgramName: cartItem.promotionProgramName,
@@ -111,18 +115,19 @@ export default function Cart({ navigation }) {
 
       //console.log(subGroupIdList);
       //setQuantity(result.data.data.cartList.quantity);
+    } else {
+      setVisible(false);
     }
   };
 
   const handleQuantityChange = (value, modelId, productId) => {
+    const foundItemIndex = checkedItems.findIndex(
+      (item) => item.modelId === modelId && item.productId === productId
+    );
     const updatedQuantityValues = { ...quantityValue };
     updatedQuantityValues[`${productId}_${modelId}`] = value;
     //console.log(value);
     setQuantityValue(updatedQuantityValues);
-
-    const foundItemIndex = checkedItems.findIndex(
-      (item) => item.modelId === modelId && item.productId === productId
-    );
     if (foundItemIndex !== -1) {
       const updatedItems = [...checkedItems];
       updatedItems[foundItemIndex].quantity = value;
@@ -149,6 +154,8 @@ export default function Cart({ navigation }) {
     if (result.status === 200) {
       setVisible(false);
       getCartItems(account);
+    } else {
+      setVisible(false);
     }
   };
   // const getTotalAmount = () => {
@@ -231,11 +238,13 @@ export default function Cart({ navigation }) {
               <Swipeable renderRightActions={() => renderRightActions(item)}>
                 <TouchableOpacity
                   onPress={() => {
-                    navigation.navigate("shopDetailScreen", {
-                      modelId: item.modelId,
-                      modelPrice: item.modelPrice,
-                      modelStockAmount: item.modelAvailableInstockAmount,
-                    });
+                    if (item.isAvailableToSale === true) {
+                      navigation.navigate("shopDetailScreen", {
+                        modelId: item.modelId,
+                        modelPrice: item.modelPrice,
+                        modelStockAmount: item.modelAvailableInstockAmount,
+                      });
+                    }
                   }}
                 >
                   <View
@@ -252,7 +261,7 @@ export default function Cart({ navigation }) {
                           itemA.modelId === item.modelId &&
                           itemA.productId === item.productId
                       )}
-                      disabled={item.availableInstockAmount > 0 ? false : true}
+                      disabled={!item.isAvailableToSale}
                       // checked={
                       //   item.availableInstockAmount > 0
                       //     ? checkedItems.some(
@@ -370,7 +379,9 @@ export default function Cart({ navigation }) {
                               paddingRight: 4,
                             }}
                           >
-                            {"đ" + item.discountValue.toLocaleString()}
+                            {item.discountValue === null
+                              ? "Ngừng bán"
+                              : "đ" + item.discountValue.toLocaleString()}
                           </Text>
                         </View>
                       </View>
@@ -391,6 +402,13 @@ export default function Cart({ navigation }) {
                                 `${item.productId}_${item.modelId}`
                               ] || item.quantity
                         }
+                        // value={
+                        //   item.quantity > item.availableInstockAmount
+                        //     ? item.availableInstockAmount
+                        //     : quantityValue[
+                        //         `${item.productId}_${item.modelId}`
+                        //       ] || item.quantity
+                        // }
                         onChange={(value) =>
                           handleQuantityChange(
                             value,
@@ -481,6 +499,9 @@ export default function Cart({ navigation }) {
                       navigation.navigate("shopDetailScreen", {
                         modelId: item.modelId,
                         modelPrice: item.modelPrice,
+                        discountValue: item.discountValue,
+                        isPercentValue: item.isPercentValue,
+                        value: item.value,
                         maingroupId: item.maingroupId,
                         subgroupId: item.subgroupId,
                         modelStockAmount: item.amount,
@@ -532,7 +553,9 @@ export default function Cart({ navigation }) {
                                 fontSize: 15,
                               }}
                             >
-                              {item.modelName}
+                              {item.modelName.length > 30
+                                ? `${item.modelName.slice(0, 30)}...`
+                                : item.modelName}
                             </Text>
                           </View>
                           {item.promotionProgramId !== null && (

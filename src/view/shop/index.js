@@ -275,6 +275,7 @@ export default function Shop({ navigation }) {
                       navigation.navigate("shopDetailScreen", {
                         modelId: item.modelId,
                         modelPrice: item.modelPrice,
+
                         maingroupId: item.maingroupId,
                         subgroupId: item.subgroupId,
                         modelStockAmount: item.amount,
@@ -326,7 +327,9 @@ export default function Shop({ navigation }) {
                                 fontSize: 15,
                               }}
                             >
-                              {item.modelName}
+                              {item.modelName.length > 30
+                                ? `${item.modelName.slice(0, 30)}...`
+                                : item.modelName}
                             </Text>
                           </View>
                           {item.promotionProgramId !== null && (

@@ -220,7 +220,9 @@ export default function PromotionDetail({ navigation, route }) {
                                   fontSize: 15,
                                 }}
                               >
-                                {item.modelName}
+                                {item.modelName.length > 30
+                                  ? `${item.modelName.slice(0, 30)}...`
+                                  : item.modelName}
                               </Text>
                             </View>
                             {item.promotionProgramId !== null && (

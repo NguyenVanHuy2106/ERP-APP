@@ -42,6 +42,7 @@ export default function ShopDetail({ navigation, route }) {
   let modelId = route.params.modelId;
   //console.log(modelId);
   let modelPrice = route.params.modelPrice;
+
   let modelStockAmount = route.params.modelStockAmount;
   const [isFav, setIsFav] = useState(0);
   const [maxStockLimit, setMaxStockLimit] = useState(modelStockAmount);
@@ -105,7 +106,7 @@ export default function ShopDetail({ navigation, route }) {
         const newSelections = prevSelections.map((selection, i) =>
           i === index ? { ...selection, ...updateSelection } : selection
         );
-        console.log("New selections:", newSelections);
+        //console.log("New selections:", newSelections);
         if (newSelections.length === maxLevelVarantProduct) {
           getProductId(modelId, newSelections);
           //setPriceOfProductId(0);
@@ -115,7 +116,7 @@ export default function ShopDetail({ navigation, route }) {
       } else {
         // The attribute is not yet selected, add a new selection
         const newSelections = [...prevSelections, updateSelection];
-        console.log("New selections add:", newSelections);
+        //console.log("New selections add:", newSelections);
         if (newSelections.length === maxLevelVarantProduct) {
           getProductId(modelId, newSelections);
           //setPriceOfProductId(0);
@@ -193,43 +194,27 @@ export default function ShopDetail({ navigation, route }) {
   };
 
   const handleAddtoCart = async (productId, quantity) => {
-    // userLogIn,
-    // modelId,
-    // productId,
-    // subgroupId,
-    // brandId,
-    // quantity,
-    // inventoryStatusId
-    setVisible(true);
-    // console.log(
-    //   account,
-    //   modelId,
-    //   productId.length === 0 ? null : productId,
-    //   modelInfo.subgroupId,
-    //   modelInfo.brandId,
-    //   quantity
-    // );
-    const result = await addToCart(
-      account,
-      modelId,
-      productId === -1 ? null : productId,
-      modelInfo.subgroupId,
-      modelInfo.brandId,
-      quantity,
-      1
-    );
-    console.log(
-      account,
-      modelId,
-      productId.length === 0 ? null : productId,
-      modelInfo.subgroupId,
-      modelInfo.brandId,
-      quantity
-    );
-    if (result.status === 200) {
-      setVisible(false);
-      Alert.alert("Thông báo", "Thêm vào giỏ hàng thành công");
-      setIsVisible(false);
+    // console.log(maxLevelVarantProduct || 0);
+    //console.log(productId);
+    if ((maxLevelVarantProduct || 0) === varant.length) {
+      //console.log("Add success");
+      setVisible(true);
+      const result = await addToCart(
+        account,
+        modelId,
+        productId === -1 ? null : productId,
+        modelInfo.subgroupId,
+        modelInfo.brandId,
+        quantity,
+        1
+      );
+      if (result.status === 200) {
+        setVisible(false);
+        Alert.alert("Thông báo", "Thêm vào giỏ hàng thành công");
+        setIsVisible(false);
+      }
+    } else {
+      Alert.alert("Thông báo", "Vui lòng chọn đầy đủ phân loại");
     }
   };
 
@@ -410,7 +395,7 @@ export default function ShopDetail({ navigation, route }) {
                 style={{
                   backgroundColor: "#ffffff",
                   paddingLeft: 20,
-                  height: 80,
+                  minHeight: 80,
                 }}
               >
                 <Text style={{ fontSize: 20, marginTop: 10, fontSize: 24 }}>
@@ -542,7 +527,9 @@ export default function ShopDetail({ navigation, route }) {
                                       flexWrap: "wrap",
                                     }}
                                   >
-                                    {item.modelName}
+                                    {item.modelName.length > 20
+                                      ? `${item.modelName.slice(0, 20)}...`
+                                      : item.modelName}
                                   </Text>
                                 </View>
                               </View>

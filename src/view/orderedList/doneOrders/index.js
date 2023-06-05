@@ -204,7 +204,7 @@ export default function DoneOrders({ navigation, route }) {
                         fontWeight: "bold",
                         paddingLeft: 12,
                         paddingTop: 12,
-                        width: "90%",
+                        width: 270,
                         flexWrap: "wrap",
                       }}
                     >

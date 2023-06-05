@@ -21,6 +21,8 @@ import OrderDetail from "../../view/orderDetail";
 import DeliveryOrders from "../../view/orderedList/deliveryOrders";
 import PromotionDetail from "../../view/promotionDetail";
 import CompletedOrder from "../../view/completedOrder";
+import Shop from "../../view/shop";
+// import Paypal from "../../helper/paypal";
 const RootStack = createStackNavigator();
 
 const rootStackScreen = () => (
@@ -120,6 +122,12 @@ const rootStackScreen = () => (
       component={CompletedOrder}
       options={{ headerShown: false }}
     />
+    {/* <RootStack.Screen
+      name="shop"
+      component={Shop}
+      options={{ headerShown: false }}
+    /> */}
+
     {/*         
     
     
